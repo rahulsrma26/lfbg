@@ -83,7 +83,7 @@ static void reshape_callback(GLFWwindow* window, int32_t ww, int32_t wh) {
 }
 
 static void error_callback(int error, const char* description) {
-    std::cerr << "Error: " << description << std::endl;
+    std::cerr << "Error (" << error << "): " << description << std::endl;
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -122,11 +122,18 @@ void initgraph(int width, int height, float multiplier, RenderType rt, int swap_
         exit(EXIT_FAILURE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    if (multiplier <= 0) {
+    if (multiplier < 0) {
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        __window_handle__ =
+            glfwCreateWindow(mode->width, mode->height, __window_title__.c_str(), glfwGetPrimaryMonitor(), NULL);
+    }
+    else if (multiplier == 0) {
         GLFWmonitor* monitor = glfwGetPrimaryMonitor();
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         __window_handle__ =
             glfwCreateWindow(mode->width, mode->height, __window_title__.c_str(), NULL, NULL);
+        glfwMaximizeWindow(__window_handle__);
     } else {
         int window_width = __screen_width__ * multiplier;
         int window_height = __screen_height__ * multiplier;

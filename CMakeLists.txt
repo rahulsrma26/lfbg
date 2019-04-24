@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.5)
 
-project(lfbg VERSION 0.1.0 DESCRIPTION "graphics library for my old dos codes that used VESA modes")
+project(lfbg VERSION 0.1.1 DESCRIPTION "graphics library for my old dos codes that used VESA modes")
 
 option(BUILD_EXAMPLES "Build the example programs" ON)
 
