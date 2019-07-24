@@ -15,16 +15,16 @@ int main(int argc, char* argv[]) {
     string t = "<Press arrow keys>";
     int tx = 50, ty = 10, dx = 1, dy = 1;
     bool manual = false;
-    while (not_closed()) {
-        cleardevice(0x773333);
+    while (!closed()) {
+        cleardevice(COLOR::CYAN);
         outtextxy(tx, ty, t);
-        if (is_pressed(GLFW_KEY_LEFT))
+        if (is_key_pressed(GLFW_KEY_LEFT))
             tx--, manual = true;
-        if (is_pressed(GLFW_KEY_RIGHT))
+        if (is_key_pressed(GLFW_KEY_RIGHT))
             tx++, manual = true;
-        if (is_pressed(GLFW_KEY_UP))
+        if (is_key_pressed(GLFW_KEY_UP))
             ty--, manual = true;
-        if (is_pressed(GLFW_KEY_DOWN))
+        if (is_key_pressed(GLFW_KEY_DOWN))
             ty++, manual = true;
         if (!manual) {
             tx += dx;

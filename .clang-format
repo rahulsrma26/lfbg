@@ -14,4 +14,6 @@ Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 PointerAlignment: Left
 AlwaysBreakTemplateDeclarations: true
+AllowShortCaseLabelsOnASingleLine: true
+IndentCaseLabels: true
 ---
