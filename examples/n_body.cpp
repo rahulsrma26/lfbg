@@ -41,8 +41,8 @@ int main(int argc, char* argv[]) {
     vector<body> bodies(n_bodies);
     int limit = (width + height) / 8;
     for (auto& b : bodies) {
-        b.mass = 100000 + rand() % 10000000;
-        double angle = (rand() % 3141592) * 2e-6;
+        b.mass = 100000 + ((rand()<<15)|rand()) % 10000000;
+        double angle = (((rand()<<15)|rand()) % 3141592) * 2e-6;
         double radius = rand() % limit;
         b.position = vector2f(width / 2 + radius * sin(angle), height / 2 + radius * cos(angle));
         b.velocity = vector2f(0, 0);

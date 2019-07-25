@@ -16,19 +16,20 @@ void text_demo() {
         outtextxy(0, 12 * (i / 16), s);
     }
     outtextxy(0, 12 * 8, "press any key for next demo.");
-    while (!kbhit());
+    while (!kbhit())
+        sleep(1);
 }
 
 void random_pixel_demo() {
     cleardevice();
     while (!kbhit())
-        putpixel(rand() % width, rand() % height, rand() & 0xffffff);
+        putpixel(rand() % width, rand() % height, rgb2color(rand(), rand(), rand()));
 }
 
 void random_line_demo() {
     cleardevice();
     while (!kbhit()) {
-        setcolor(rand() & 0xffffff);
+        setcolor(rgb2color(rand(), rand(), rand()));
         int x1 = rand() % width, y1 = rand() % height;
         int x2 = rand() % width, y2 = rand() % height;
         line(x1, y1, x2, y2);
@@ -38,7 +39,7 @@ void random_line_demo() {
 void random_circle_demo() {
     cleardevice();
     while (!kbhit()) {
-        setcolor(rand() & 0xffffff);
+        setcolor(rgb2color(rand(), rand(), rand()));
         int x = rand() % width, y = rand() % height, r = rand() % ((width + height) / 4);
         circle(x, y, r);
     }
@@ -47,7 +48,7 @@ void random_circle_demo() {
 void random_rectangle_demo() {
     cleardevice();
     while (!kbhit()) {
-        setcolor(rand() & 0xffffff);
+        setcolor(rgb2color(rand(), rand(), rand()));
         int left = rand() % width, top = rand() % height;
         int right = rand() % width, bottom = rand() % height;
         rectangle(left, top, right, bottom);
@@ -57,7 +58,7 @@ void random_rectangle_demo() {
 void random_bar_demo() {
     cleardevice();
     while (!kbhit()) {
-        setcolor(rand() & 0xffffff);
+        setcolor(rgb2color(rand(), rand(), rand()));
         int left = rand() % width, top = rand() % height;
         int right = rand() % width, bottom = rand() % height;
         bar(left, top, right, bottom);
@@ -76,7 +77,8 @@ void polygon_line_demo() {
     for (int i = 0; i < lim; i++)
         for (int j = i + 1; j < lim; j++)
             line(x[i], y[i], x[j], y[j]);
-    while (!kbhit());
+    while (!kbhit())
+        sleep(1);
 }
 
 int main(int argc, char* argv[]) {

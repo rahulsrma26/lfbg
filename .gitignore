@@ -5,3 +5,5 @@
 **/*.pyc
 tmp/
 build/
+wbuild/
+lbuild/

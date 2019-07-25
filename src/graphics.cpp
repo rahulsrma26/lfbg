@@ -118,6 +118,7 @@ uint32_t __default_font__[128 * 3] = {
     202911768,  1804,       1935396352, 0,          0,          134217728,  1667446300, 127};
 
 static void reshape_callback(GLFWwindow* window, int32_t ww, int32_t wh) {
+    std::ignore = ww + wh;
     int cw, ch;
     glfwGetFramebufferSize(window, &cw, &ch);
     glViewport(0, 0, cw, ch);
@@ -141,6 +142,7 @@ static void error_callback(int error, const char* description) {
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    std::ignore = scancode + action + mods;
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     if (action == GLFW_PRESS) {
@@ -227,6 +229,8 @@ void cleardevice(color c) { std::fill(__screen_buffer__.begin(), __screen_buffer
 
 void setcolor(color c) { __foreground_color__ = c; }
 
+color rgb2color(int r, int g, int b) { return ((b&255)<<16)|((g&255)<<8)|(r&255); }
+
 color getcolor() { return __foreground_color__; }
 
 void putpixel(int x, int y, color c) {
@@ -270,7 +274,7 @@ bool cohen_sutherland_clip(int& x1, int& y1, int& x2, int& y2) {
         } else if (c1 & c2) { // If both endpoints are outside rectangle, in same region
             break;
         } else { // Some segment of line lies within the rectangle
-            double x, y;
+            double x{0}, y{0};
             // At least one endpoint is outside the
             // rectangle, pick it.
             int co = c1 != 0 ? c1 : c2;
@@ -487,6 +491,10 @@ void outtextxy(int x, int y, const std::string& text) {
 }
 
 // extra
+
+void sleep(double seconds){
+    std::this_thread::sleep_for(std::chrono::milliseconds((long)(seconds * 1000)));
+}
 
 bool closed() { return glfwWindowShouldClose(__window_handle__); }
 

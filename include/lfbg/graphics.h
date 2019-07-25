@@ -9,6 +9,9 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <tuple>
+#include <chrono>
+#include <thread>
 
 namespace lfbg {
 typedef uint32_t color;
@@ -50,6 +53,8 @@ void cleardevice(color c = COLOR::BLACK);
 
 void setcolor(color);
 
+color rgb2color(int r, int g, int b);
+
 color getcolor();
 
 void putpixel(int x, int y, color);
@@ -71,6 +76,8 @@ void bar(int left, int top, int right, int bottom);
 void outtextxy(int x, int y, const std::string& text);
 
 // extra
+
+void sleep(double seconds);
 
 bool closed();
 
