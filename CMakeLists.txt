@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.5)
 project(lfbg VERSION 0.1.1 DESCRIPTION "graphics library for my old dos codes that used VESA modes")
 
 option(BUILD_EXAMPLES "Build the example programs" ON)
+option(BUILD_DOS "Build the dos programs" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -12,7 +13,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set( CMAKE_CXX_STANDARD 11 )
+set( CMAKE_CXX_STANDARD 17 )
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
   set(CMAKE_CXX_FLAGS_DEBUG "/DEBUG")
@@ -43,4 +44,8 @@ target_link_libraries(${PROJECT_NAME} glfw)
 
 if (BUILD_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+if (BUILD_DOS)
+    add_subdirectory(dos)
 endif()

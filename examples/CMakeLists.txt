@@ -11,3 +11,6 @@ target_link_libraries(n_body lfbg)
 
 add_executable(snake snake.cpp)
 target_link_libraries(snake lfbg)
+
+add_executable(mouse mouse.cpp)
+target_link_libraries(mouse lfbg)

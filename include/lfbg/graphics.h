@@ -12,6 +12,8 @@
 #include <tuple>
 #include <chrono>
 #include <thread>
+#include <functional>
+#include <cmath>
 
 namespace lfbg {
 typedef uint32_t color;
@@ -36,7 +38,7 @@ extern const color WHITE;
 } // namespace COLOR
 
 template <class T>
-struct point2d{
+struct point2d {
     T x, y;
 };
 
@@ -44,12 +46,18 @@ extern color palette[256];
 
 enum class RenderType { Retro, Smooth };
 
-void initgraph(int width, int height, float multiplier = 1, RenderType rt = RenderType::Retro,
-               int swap_interval = 0);
+GLFWwindow* initgraph(int width, int height, float multiplier = 1,
+                      RenderType rt = RenderType::Retro, int swap_interval = 0);
 
 void closegraph();
 
 void cleardevice(color c = COLOR::BLACK);
+
+std::pair<int, int> get_buffer_size();
+
+std::pair<int, int> get_window_size();
+
+std::pair<int, int> get_cursor_pos();
 
 void setcolor(color);
 
