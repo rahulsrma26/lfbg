@@ -51,7 +51,7 @@ bool __mouse_is_up__[GLFW_MOUSE_BUTTON_LAST + 1];
 bool __mouse_is_down__[GLFW_MOUSE_BUTTON_LAST + 1];
 window_helper __window__helper_obj__;
 
-color palette[256] = { // Default VGA Palette
+color __palette__[256] = { // Default VGA Palette
     0x000000, 0x800000, 0x008000, 0x808000, 0x000080, 0x800080, 0x008080, 0xc0c0c0, 0x808080,
     0xff0000, 0x00ff00, 0xffff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffffff, 0x000000, 0x00005f,
     0x000087, 0x0000af, 0x0000d7, 0x0000ff, 0x005f00, 0x005f5f, 0x005f87, 0x005faf, 0x005fd7,
@@ -132,6 +132,10 @@ uint32_t __default_font__[128 * 3] = {
     16163,      202127360,  201720582,  14348,      404232192,  404226072,  6168,       202114816,
     202911768,  1804,       1935396352, 0,          0,          134217728,  1667446300, 127};
 
+// ----------------------------------------------------------------------------
+// callbacks
+// ----------------------------------------------------------------------------
+
 auto __default_window_resize_callback__ = [](int32_t w, int32_t h) {
     glfwGetFramebufferSize(__window_handle__, &__window_width__, &__window_height__);
     glViewport(0, 0, __window_width__, __window_height__);
@@ -154,10 +158,6 @@ auto __default_window_resize_callback__ = [](int32_t w, int32_t h) {
         __cursor_offset_y__ = std::floor((h - __cursor_scale_y__) / 2);
     }
 
-    // std::cout << w << 'x' << h << '|' << __window_width__ << 'x' << __window_height__ << ' ';
-    // std::cout << ar << '|' << __cursor_offset_x__ << 'x' << __cursor_offset_y__;
-    // std::cout << '*' << __cursor_scale_x__ << 'x' << __cursor_scale_y__ << std::endl;
-
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
@@ -177,12 +177,10 @@ auto __default_keyboard_callback__ = [](int key, int, int action, int) {
 };
 
 auto __default_cursor_pos_callback__ = [](double xpos, double ypos) {
-    // __cursor_x__ = xpos;
-    // __cursor_y__ = ypos;
     __cursor_x__ = (xpos - __cursor_offset_x__) * __screen_width__ / __cursor_scale_x__;
-    __cursor_x__ = std::clamp(__cursor_x__, 0.0, __screen_width__ - 1.0);
+    __cursor_x__ = std::clamp(__cursor_x__, 0.0, __screen_width__ - 1e-6);
     __cursor_y__ = (ypos - __cursor_offset_y__) * __screen_height__ / __cursor_scale_y__;
-    __cursor_y__ = std::clamp(__cursor_y__, 0.0, __screen_height__ - 1.0);
+    __cursor_y__ = std::clamp(__cursor_y__, 0.0, __screen_height__ - 1e-6);
 };
 
 auto __default_mouse_button_callback__ = [](int button, int action, int) {
@@ -223,43 +221,9 @@ void set_mouse_button_callback(std::function<void(int, int, int)> callback) {
     __window__helper_obj__.mouse_button_callback = callback;
 }
 
-// static void reshape_callback(GLFWwindow* window, int32_t ww, int32_t wh) {
-//     std::ignore = ww + wh;
-//     int cw, ch;
-//     glfwGetFramebufferSize(window, &cw, &ch);
-//     glViewport(0, 0, cw, ch);
-//     glMatrixMode(GL_PROJECTION);
-//     glLoadIdentity();
-//     double ar = (double)(cw) / ch;
-//     const double oar = (double)(__screen_width__) / __screen_height__;
-//     ar /= oar;
-//     if (ar >= 1.0)
-//         glOrtho(-ar, ar, -1, 1, 1, -1);
-//     else
-//         glOrtho(-1, 1, -1 / ar, 1 / ar, 1.0, -1.0);
-
-//     glMatrixMode(GL_MODELVIEW);
-//     glLoadIdentity();
-//     glClear(GL_COLOR_BUFFER_BIT);
-// }
-
-// static void error_callback(int error, const char* description) {
-//     std::cerr << "Error (" << error << "): " << description << std::endl;
-// }
-
-// static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-//     std::ignore = scancode + action + mods;
-//     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-//         glfwSetWindowShouldClose(window, GLFW_TRUE);
-//     if (action == GLFW_PRESS) {
-//         __keyboard_is_pressed__[key] = true;
-//         __keyboard_is_down__[key] = true;
-//     } else if (action == GLFW_RELEASE) {
-//         __keyboard_is_pressed__[key] = false;
-//         __keyboard_is_up__[key] = true;
-//         __kbhit__ = key;
-//     }
-// }
+// ----------------------------------------------------------------------------
+// core
+// ----------------------------------------------------------------------------
 
 GLFWwindow* initgraph(int width, int height, float multiplier, RenderType rt, int swap_interval) {
     __screen_width__ = width;
@@ -364,24 +328,128 @@ void closegraph() {
     exit(EXIT_SUCCESS);
 }
 
+void bitblt() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, __screen_width__, __screen_height__, GL_BGRA,
+                    GL_UNSIGNED_BYTE, __screen_buffer__.data());
+    glBegin(GL_TRIANGLE_FAN);
+    glTexCoord2f(0, 0);
+    glVertex2f(-1, 1);
+    glTexCoord2f(1, 0);
+    glVertex2f(1, 1);
+    glTexCoord2f(1, 1);
+    glVertex2f(1, -1);
+    glTexCoord2f(0, 1);
+    glVertex2f(-1, -1);
+    glEnd();
+    glfwSwapBuffers(__window_handle__);
+    __kbhit__ = 0;
+    for (size_t i = 0; i < GLFW_KEY_LAST + 1; i++)
+        __keyboard_is_down__[i] = __keyboard_is_up__[i] = false;
+    glfwPollEvents();
+
+    if (__show_fps__) {
+        __frames_till_last_fps__++;
+        double curTime = glfwGetTime();
+        double delta = curTime - __last_time__;
+        if (delta >= 1.0) {
+            double fps = __frames_till_last_fps__ / delta;
+            // if (__last_fps__ > 0)
+            //     fps = 0.3 * fps + 0.7 * __last_fps__;
+            std::string title = __window_title__ + " fps: " + std::to_string(fps);
+            glfwSetWindowTitle(__window_handle__, title.c_str());
+            __frames_till_last_fps__ = 0;
+            __last_time__ = curTime;
+            __last_fps__ = fps;
+        }
+    }
+    __total_frames__++;
+}
+
+// ----------------------------------------------------------------------------
+// basic drawing
+// ----------------------------------------------------------------------------
+
 void cleardevice(color c) { std::fill(__screen_buffer__.begin(), __screen_buffer__.end(), c); }
 
-void setcolor(color c) { __foreground_color__ = c; }
-
-color rgb2color(int r, int g, int b) { return ((b & 255) << 16) | ((g & 255) << 8) | (r & 255); }
-
-color getcolor() { return __foreground_color__; }
-
 void putpixel(int x, int y, color c) {
-    if (0 <= x && x <= __screen_width__ && 0 <= y && y <= __screen_height__)
+    if (0 <= x && x < __screen_width__ && 0 <= y && y < __screen_height__)
         __screen_buffer__[y * __screen_width__ + x] = c;
 }
 
 color getpixel(int x, int y) {
-    if (0 <= x && x <= __screen_width__ && 0 <= y && y <= __screen_height__)
+    if (0 <= x && x < __screen_width__ && 0 <= y && y < __screen_height__)
         return __screen_buffer__[y * __screen_width__ + x];
     return -1;
 }
+
+void apply_palette() {
+    for (auto& x : __screen_buffer__)
+        x = __palette__[x & 0xff];
+}
+
+void set_palette(int idx, color c) { __palette__[idx & 0xff] = c; }
+
+color get_palette(int idx) { return __palette__[idx & 0xff]; }
+
+// ----------------------------------------------------------------------------
+// info
+// ----------------------------------------------------------------------------
+
+bool closed() { return glfwWindowShouldClose(__window_handle__); }
+
+std::pair<int, int> get_buffer_size() { return {__screen_width__, __screen_height__}; }
+
+std::pair<int, int> get_window_size() { return {__window_width__, __window_height__}; }
+
+std::pair<double, double> get_cursor_pos() { return {__cursor_x__, __cursor_y__}; }
+
+int kbhit() {
+    bitblt();
+    return __kbhit__;
+}
+
+bool is_key_pressed(int key) { return __keyboard_is_pressed__[key]; }
+
+bool is_key_down(int key) { return __keyboard_is_down__[key]; }
+
+bool is_key_up(int key) { return __keyboard_is_up__[key]; }
+
+bool is_button_pressed(int button) { return __mouse_is_pressed__[button]; }
+
+bool is_button_down(int button) { return __mouse_is_down__[button]; }
+
+bool is_button_up(int button) { return __mouse_is_up__[button]; }
+
+// ----------------------------------------------------------------------------
+// misc
+// ----------------------------------------------------------------------------
+
+color rgb2color(int r, int g, int b) { return ((b & 255) << 16) | ((g & 255) << 8) | (r & 255); }
+
+void delay(int miliseconds) { std::this_thread::sleep_for(std::chrono::milliseconds(miliseconds)); }
+
+void set_title(const std::string& title) {
+    __window_title__ = title;
+    glfwSetWindowTitle(__window_handle__, __window_title__.c_str());
+}
+
+const std::string& get_title() { return __window_title__; }
+
+void show_fps() { __show_fps__ = true; }
+
+void hide_fps() {
+    __show_fps__ = false;
+    glfwSetWindowTitle(__window_handle__, __window_title__.c_str());
+}
+
+// ----------------------------------------------------------------------------
+// advance drawing
+// ----------------------------------------------------------------------------
+
+void setcolor(color c) { __foreground_color__ = c; }
+
+color getcolor() { return __foreground_color__; }
 
 constexpr int COHEN_SUTHERLAND_INSIDE = 0b0000;
 constexpr int COHEN_SUTHERLAND_LEFT = 0b0001;
@@ -524,7 +592,7 @@ void bresenham_symmetric_plot(int xc, int yc, int x, int y) {
 void circle(int xc, int yc, int r) {
     int x = 0, y = r, d = 3 - (2 * r);
     bresenham_symmetric_plot(xc, yc, x, y);
-    while (x <= y) {
+    while (x < y) {
         if (d <= 0) {
             d = d + (4 * x) + 6;
         } else {
@@ -590,6 +658,19 @@ void bar(int left, int top, int right, int bottom) {
         std::fill(begin + offset, end + offset, __foreground_color__);
 }
 
+void floodfill(int x, int y, color border) {
+    if (x < 0 || y < 0 || x >= __screen_width__ || y >= __screen_height__)
+        return;
+    if (__screen_buffer__[y * __screen_width__ + x] != border &&
+        __screen_buffer__[y * __screen_width__ + x] != __foreground_color__) {
+        __screen_buffer__[y * __screen_width__ + x] == __foreground_color__;
+        floodfill(x - 1, y, border);
+        floodfill(x + 1, y, border);
+        floodfill(x, y - 1, border);
+        floodfill(x, y + 1, border);
+    }
+}
+
 void outtextxy(int x, int y, const std::string& text) {
     if (y <= -12 || y >= __screen_height__)
         return;
@@ -627,83 +708,6 @@ void outtextxy(int x, int y, const std::string& text) {
                 if (v & 1)
                     __screen_buffer__[j * __screen_width__ + i + x] = __foreground_color__;
     }
-}
-
-// extra
-
-void sleep(double seconds) {
-    std::this_thread::sleep_for(std::chrono::milliseconds((long)(seconds * 1000)));
-}
-
-bool closed() { return glfwWindowShouldClose(__window_handle__); }
-
-void bitblt() {
-    glClear(GL_COLOR_BUFFER_BIT);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, __screen_width__, __screen_height__, GL_BGRA,
-                    GL_UNSIGNED_BYTE, __screen_buffer__.data());
-    glBegin(GL_TRIANGLE_FAN);
-    glTexCoord2f(0, 0);
-    glVertex2f(-1, 1);
-    glTexCoord2f(1, 0);
-    glVertex2f(1, 1);
-    glTexCoord2f(1, 1);
-    glVertex2f(1, -1);
-    glTexCoord2f(0, 1);
-    glVertex2f(-1, -1);
-    glEnd();
-    glfwSwapBuffers(__window_handle__);
-    __kbhit__ = 0;
-    for (size_t i = 0; i < GLFW_KEY_LAST + 1; i++)
-        __keyboard_is_down__[i] = __keyboard_is_up__[i] = false;
-    glfwPollEvents();
-
-    if (__show_fps__) {
-        __frames_till_last_fps__++;
-        double curTime = glfwGetTime();
-        double delta = curTime - __last_time__;
-        if (delta >= 1.0) {
-            double fps = __frames_till_last_fps__ / delta;
-            // if (__last_fps__ > 0)
-            //     fps = 0.3 * fps + 0.7 * __last_fps__;
-            std::string title = __window_title__ + " fps: " + std::to_string(fps);
-            glfwSetWindowTitle(__window_handle__, title.c_str());
-            __frames_till_last_fps__ = 0;
-            __last_time__ = curTime;
-            __last_fps__ = fps;
-        }
-    }
-    __total_frames__++;
-}
-
-int kbhit() {
-    bitblt();
-    return __kbhit__;
-}
-
-bool is_key_pressed(int key) { return __keyboard_is_pressed__[key]; }
-
-bool is_key_down(int key) { return __keyboard_is_down__[key]; }
-
-bool is_key_up(int key) { return __keyboard_is_up__[key]; }
-
-std::pair<int, int> get_buffer_size() { return {__screen_width__, __screen_height__}; }
-
-std::pair<int, int> get_window_size() { return {__window_width__, __window_height__}; }
-
-std::pair<int, int> get_cursor_pos() { return {__cursor_x__, __cursor_y__}; }
-
-void set_title(const std::string& title) {
-    __window_title__ = title;
-    glfwSetWindowTitle(__window_handle__, __window_title__.c_str());
-}
-
-const std::string& get_title() { return __window_title__; }
-
-void show_fps() { __show_fps__ = true; }
-
-void hide_fps() {
-    __show_fps__ = false;
-    glfwSetWindowTitle(__window_handle__, __window_title__.c_str());
 }
 
 } // namespace lfbg

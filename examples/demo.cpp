@@ -16,8 +16,9 @@ void text_demo() {
         outtextxy(0, 12 * (i / 16), s);
     }
     outtextxy(0, 12 * 8, "press any key for next demo.");
-    while (!kbhit())
-        sleep(1);
+    for (; !kbhit(); delay(200))
+        if (closed())
+            exit(0);
 }
 
 void random_pixel_demo() {
@@ -69,7 +70,7 @@ void polygon_line_demo() {
     cleardevice();
     setcolor(COLOR::WHITE);
     constexpr int lim = 14;
-    int x[lim], y[lim], r = height / 2;
+    int x[lim], y[lim], r = (height - 1) / 2;
     for (int i = 0; i < lim; i++) {
         x[i] = width / 2 + r * sin(2 * 3.1415 * i / (lim - 1));
         y[i] = height / 2 + r * cos(2 * 3.1415 * i / (lim - 1));
@@ -77,8 +78,9 @@ void polygon_line_demo() {
     for (int i = 0; i < lim; i++)
         for (int j = i + 1; j < lim; j++)
             line(x[i], y[i], x[j], y[j]);
-    while (!kbhit())
-        sleep(1);
+    for (; !kbhit(); delay(200))
+        if (closed())
+            exit(0);
 }
 
 int main(int argc, char* argv[]) {

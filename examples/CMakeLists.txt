@@ -14,3 +14,9 @@ target_link_libraries(snake lfbg)
 
 add_executable(mouse mouse.cpp)
 target_link_libraries(mouse lfbg)
+
+add_executable(vga vga.cpp)
+target_link_libraries(vga lfbg)
+
+add_executable(test test.cpp)
+target_link_libraries(test lfbg)

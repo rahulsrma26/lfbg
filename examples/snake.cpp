@@ -7,6 +7,11 @@ using namespace std;
 using namespace lfbg;
 constexpr int width = 32, height = 20;
 
+template <class T>
+struct point2d {
+    T x, y;
+};
+
 struct snake {
     deque<point2d<int>> body;
     snake() { body.push_front({height / 2, width / 2}); }
