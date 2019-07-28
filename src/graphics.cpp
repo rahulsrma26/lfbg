@@ -132,7 +132,7 @@ uint32_t __default_font__[128 * 3] = {
     16163,      202127360,  201720582,  14348,      404232192,  404226072,  6168,       202114816,
     202911768,  1804,       1935396352, 0,          0,          134217728,  1667446300, 127};
 
-auto __default_window_resize_callback__ = [&](int32_t, int32_t) {
+auto __default_window_resize_callback__ = [](int32_t w, int32_t h) {
     glfwGetFramebufferSize(__window_handle__, &__window_width__, &__window_height__);
     glViewport(0, 0, __window_width__, __window_height__);
     glMatrixMode(GL_PROJECTION);
@@ -142,25 +142,28 @@ auto __default_window_resize_callback__ = [&](int32_t, int32_t) {
     ar /= oar;
     if (ar >= 1.0) {
         glOrtho(-ar, ar, -1, 1, 1, -1);
-        __cursor_scale_x__ = std::ceil(__window_height__ * oar);
-        __cursor_scale_y__ = __window_height__;
-        __cursor_offset_x__ = std::floor((__window_width__ - __cursor_scale_x__) / 2);
+        __cursor_scale_x__ = std::ceil(h * oar);
+        __cursor_scale_y__ = h;
+        __cursor_offset_x__ = std::floor((w - __cursor_scale_x__) / 2);
         __cursor_offset_y__ = 0;
     } else {
         glOrtho(-1, 1, -1 / ar, 1 / ar, 1.0, -1.0);
-        __cursor_scale_x__ = __window_width__;
-        __cursor_scale_y__ = std::ceil(__window_width__ / oar);
+        __cursor_scale_x__ = w;
+        __cursor_scale_y__ = std::ceil(w / oar);
         __cursor_offset_x__ = 0;
-        __cursor_offset_y__ = std::floor((__window_height__ - __cursor_scale_y__) / 2);
+        __cursor_offset_y__ = std::floor((h - __cursor_scale_y__) / 2);
     }
-    std::cout << ar << '|' << __cursor_offset_x__ << 'x' << __cursor_offset_y__ << std::endl;
+
+    // std::cout << w << 'x' << h << '|' << __window_width__ << 'x' << __window_height__ << ' ';
+    // std::cout << ar << '|' << __cursor_offset_x__ << 'x' << __cursor_offset_y__;
+    // std::cout << '*' << __cursor_scale_x__ << 'x' << __cursor_scale_y__ << std::endl;
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
 };
 
-auto __default_keyboard_callback__ = [&](int key, int, int action, int) {
+auto __default_keyboard_callback__ = [](int key, int, int action, int) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(__window_handle__, GLFW_TRUE);
     if (action == GLFW_PRESS) {
@@ -173,12 +176,16 @@ auto __default_keyboard_callback__ = [&](int key, int, int action, int) {
     }
 };
 
-auto __default_cursor_pos_callback__ = [&](double xpos, double ypos) {
+auto __default_cursor_pos_callback__ = [](double xpos, double ypos) {
+    // __cursor_x__ = xpos;
+    // __cursor_y__ = ypos;
     __cursor_x__ = (xpos - __cursor_offset_x__) * __screen_width__ / __cursor_scale_x__;
+    __cursor_x__ = std::clamp(__cursor_x__, 0.0, __screen_width__ - 1.0);
     __cursor_y__ = (ypos - __cursor_offset_y__) * __screen_height__ / __cursor_scale_y__;
+    __cursor_y__ = std::clamp(__cursor_y__, 0.0, __screen_height__ - 1.0);
 };
 
-auto __default_mouse_button_callback__ = [&](int button, int action, int) {
+auto __default_mouse_button_callback__ = [](int button, int action, int) {
     if (action == GLFW_PRESS) {
         __mouse_is_pressed__[button] = true;
         __mouse_is_down__[button] = true;
@@ -342,7 +349,8 @@ GLFWwindow* initgraph(int width, int height, float multiplier, RenderType rt, in
     }
     glActiveTexture(GL_TEXTURE0);
 
-    __default_window_resize_callback__(0, 0);
+    glfwGetWindowSize(__window_handle__, &__window_width__, &__window_height__);
+    __default_window_resize_callback__(__window_width__, __window_height__);
     __last_time__ = glfwGetTime();
     __last_fps__ = -1;
     __frames_till_last_fps__ = 0;

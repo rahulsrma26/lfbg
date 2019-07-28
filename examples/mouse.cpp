@@ -419,7 +419,7 @@ int main(int argc, char* argv[]) {
 
     using namespace lfbg;
 
-    constexpr int width = 320, height = 200;
+    constexpr int width = 256, height = 256;
     float multiplier = 1;
     if (argc > 1)
         multiplier = std::stof(argv[1]);
