@@ -12,10 +12,11 @@ int main(int argc, char* argv[]) {
         multiplier = std::stof(argv[1]);
 
     initgraph(width, height, multiplier, RenderType::Retro, 1);
+    enable_palette();
+
     for (int y = 0, c = 0; y < 16; y++)
         for (int x = 0; x < 16; x++, c++)
             putpixel(x, y, c);
-    apply_palette();
 
     for (; !closed(); bitblt())
         if (is_key_up(GLFW_KEY_ESCAPE))

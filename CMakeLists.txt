@@ -47,5 +47,5 @@ if (BUILD_EXAMPLES)
 endif()
 
 if (BUILD_DOS)
-    add_subdirectory(dos)
+    add_subdirectory(tc_projects)
 endif()
