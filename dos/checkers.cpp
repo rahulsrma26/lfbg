@@ -1,122 +1,139 @@
+#include <fstream.h>
+#include <dos.h>
+#include <graphics.h>
 #include <stdlib.h>
-#include <string>
-#include <cmath>
-#include <fstream>
-#include "lfbg/graphics.h"
-
-using namespace std;
-
+#include <stdio.h>
+#include <conio.h>
+void waitretrace()
+{asm mov dx,3DAh
+l1:
+ asm in al,dx
+ asm and al,08h
+ asm jnz l1
+l2:
+ asm in al,dx
+ asm and al,08h
+ asm jz  l2
+}
+void PORTPal(unsigned char ColorNo,unsigned char R,unsigned char G,unsigned char B)
+{  if(ColorNo>7)ColorNo+=48; else if(ColorNo==6)ColorNo=20;
+   outp(0x3c8,ColorNo);
+   outp(0x3c9,R);   outp(0x3c9,G);   outp(0x3c9,B);
+}
+union REGS im,om;
 int pal[16][3];
 int menu_app=0,gam=0,p1_c=11,p2_c=11;
-// void credit()
-// { im.x.ax=2;
-//   int86(0x33,&im,&om);
-//   cleardevice();
-//  struct palettetype pal;
-//  for (int i=1; i<10; i++)
-//   PORTPal(i, 0,0 ,0 );
-//   PORTPal(10,54,20,43 );
-//   PORTPal(0,0,0,0);
-//  settextstyle(3,0,6);
-//  setcolor(1);
-//  outtextxy(100,50,"P");
-//  setcolor(2);
-//  outtextxy(150,50,"R");
-//  setcolor(3);
-//  outtextxy(200,50,"O");
-//  setcolor(4);
-//  outtextxy(250,50,"G");
-//  setcolor(5);
-//  outtextxy(300,50,"R");
-//  setcolor(6);
-//  outtextxy(350,50,"A");
-//  setcolor(7);
-//  outtextxy(400,50,"M");
-//  setcolor(8);
-//  outtextxy(450,50,"E");
-//  setcolor(9);
-//  outtextxy(500,50,"R");
-//  setcolor(10);
-//  outtextxy(100,200,"PRASHANT VERMA");
-//  outtextxy(100,300,"RAHUL SHARMA");
-//  while(!kbhit())
-//  {
-//  for(i=1;i<18;i+=4)
-//  {waitretrace();
-//   for(int j=63;j<64;j++)
-//   {
-//     PORTPal(1,j/(2*abs(i-2)),j/(abs(i-2)),j/(2*abs(i-2)));
-//     PORTPal(2,j/(2*abs(i-4)),j/(abs(i-4)),j/(2*abs(i-4)));
-//     PORTPal(3,j/(2*abs(i-6)),j/(abs(i-6)),j/(2*abs(i-6)));
-//     PORTPal(4,j/(2*abs(i-8)),j/(abs(i-8)),j/(2*abs(i-8)));
-//     PORTPal(5,j/(2*abs(i-10)),j/(abs(i-10)),j/(2*abs(i-10)));
-//     PORTPal(6,j/(2*abs(i-12)),j/(abs(i-12)),j/(2*abs(i-12)));
-//     PORTPal(7,j/(2*abs(i-14) ),j/(abs(i-14)),j/(2*abs(i-14)));
-//     PORTPal(8,j/(2*abs(i-16)),j/(abs(i-16)),j/(2*abs(i-16)));
-//     PORTPal(9,j/(2*abs(i-18)),j/(abs(i-18)),j/(2*abs(i-18)));
-//   }
-//   delay(100);
-//  }
-//   for(i=17;i>0;i-=4)
-//  {waitretrace();
-//   for(int j=63;j<64;j++)
-//   {
-//     PORTPal(1,j/(2*abs(i-2)),j/(abs(i-2)),j/(2*abs(i-2)));
-//     PORTPal(2,j/(2*abs(i-4)),j/(abs(i-4)),j/(2*abs(i-4)));
-//     PORTPal(3,j/(2*abs(i-6)),j/(abs(i-6)),j/(2*abs(i-6)));
-//     PORTPal(4,j/(2*abs(i-8)),j/(abs(i-8)),j/(2*abs(i-8)));
-//     PORTPal(5,j/(2*abs(i-10)),j/(abs(i-10)),j/(2*abs(i-10)));
-//     PORTPal(6,j/(2*abs(i-12)),j/(abs(i-12)),j/(2*abs(i-12)));
-//     PORTPal(7,j/(2*abs(i-14)),j/(abs(i-14)),j/(2*abs(i-14)));
-//     PORTPal(8,j/(2*abs(i-16)),j/(abs(i-16)),j/(2*abs(i-16)));
-//     PORTPal(9,j/(2*abs(i-18)),j/(abs(i-18)),j/(2*abs(i-18)));
-//   }
-//   delay(100);
-//  }
-//  }
-//  getch();
-// }
-
+void credit()
+{ im.x.ax=2;
+  int86(0x33,&im,&om);
+  cleardevice();
+ struct palettetype pal;
+ for (int i=1; i<10; i++)
+  PORTPal(i, 0,0 ,0 );
+  PORTPal(10,54,20,43 );
+  PORTPal(0,0,0,0);
+ settextstyle(3,0,6);
+ setcolor(1);
+ outtextxy(100,50,"P");
+ setcolor(2);
+ outtextxy(150,50,"R");
+ setcolor(3);
+ outtextxy(200,50,"O");
+ setcolor(4);
+ outtextxy(250,50,"G");
+ setcolor(5);
+ outtextxy(300,50,"R");
+ setcolor(6);
+ outtextxy(350,50,"A");
+ setcolor(7);
+ outtextxy(400,50,"M");
+ setcolor(8);
+ outtextxy(450,50,"E");
+ setcolor(9);
+ outtextxy(500,50,"R");
+ setcolor(10);
+ outtextxy(100,200,"PRASHANT VERMA");
+ outtextxy(100,300,"RAHUL SHARMA");
+ while(!kbhit())
+ {
+ for(i=1;i<18;i+=4)
+ {waitretrace();
+  for(int j=63;j<64;j++)
+  {
+    PORTPal(1,j/(2*abs(i-2)),j/(abs(i-2)),j/(2*abs(i-2)));
+    PORTPal(2,j/(2*abs(i-4)),j/(abs(i-4)),j/(2*abs(i-4)));
+    PORTPal(3,j/(2*abs(i-6)),j/(abs(i-6)),j/(2*abs(i-6)));
+    PORTPal(4,j/(2*abs(i-8)),j/(abs(i-8)),j/(2*abs(i-8)));
+    PORTPal(5,j/(2*abs(i-10)),j/(abs(i-10)),j/(2*abs(i-10)));
+    PORTPal(6,j/(2*abs(i-12)),j/(abs(i-12)),j/(2*abs(i-12)));
+    PORTPal(7,j/(2*abs(i-14) ),j/(abs(i-14)),j/(2*abs(i-14)));
+    PORTPal(8,j/(2*abs(i-16)),j/(abs(i-16)),j/(2*abs(i-16)));
+    PORTPal(9,j/(2*abs(i-18)),j/(abs(i-18)),j/(2*abs(i-18)));
+  }
+  delay(100);
+ }
+  for(i=17;i>0;i-=4)
+ {waitretrace();
+  for(int j=63;j<64;j++)
+  {
+    PORTPal(1,j/(2*abs(i-2)),j/(abs(i-2)),j/(2*abs(i-2)));
+    PORTPal(2,j/(2*abs(i-4)),j/(abs(i-4)),j/(2*abs(i-4)));
+    PORTPal(3,j/(2*abs(i-6)),j/(abs(i-6)),j/(2*abs(i-6)));
+    PORTPal(4,j/(2*abs(i-8)),j/(abs(i-8)),j/(2*abs(i-8)));
+    PORTPal(5,j/(2*abs(i-10)),j/(abs(i-10)),j/(2*abs(i-10)));
+    PORTPal(6,j/(2*abs(i-12)),j/(abs(i-12)),j/(2*abs(i-12)));
+    PORTPal(7,j/(2*abs(i-14)),j/(abs(i-14)),j/(2*abs(i-14)));
+    PORTPal(8,j/(2*abs(i-16)),j/(abs(i-16)),j/(2*abs(i-16)));
+    PORTPal(9,j/(2*abs(i-18)),j/(abs(i-18)),j/(2*abs(i-18)));
+  }
+  delay(100);
+ }
+ }
+ getch();
+}
 char pos[7][7];
 void savegame()
 {
-    fstream fgame("game.dll",ios::in|ios::out|ios::binary);
-    fgame.write((char*)&pos,sizeof(pos));
-    fgame.close();
+ fstream fgame("game.dll",ios::in|ios::out|ios::binary);
+ fgame.write((char*)&pos,sizeof(pos));
+ fgame.close();
 }
-
 void loadgame()
 {
  fstream fgame("game.dll",ios::in|ios::out|ios::binary);
  fgame.read((char*)&pos,sizeof(pos));
  fgame.close();
 }
-
 void newgame()
 {
  for(int i=0;i<22;i+=2)
   pos[(i/7)][(i%7)]=1;
- for(int i=28;i<49;i+=2)
+ for(i=28;i<49;i+=2)
   pos[(i/7)][(i%7)]=2;
- for(int i=1;i<49;i+=2)
+ for(i=1;i<49;i+=2)
   pos[(i/7)][(i%7)]=0;
  p1_c=p2_c=11;
 }
-
 void score()
 {if(p1_c!=0&&p2_c!=0){
+ char str[10];
  setcolor(7);
  rectangle(50,40,500,80);
  setcolor(13);
- outtextxy(60,50,"Player 1 - " + to_string(p1_c));
- outtextxy(270,50,"Player 2 - " + to_string(p2_c));
+ outtextxy(60,50,"Player 1 -");
+ outtextxy(270,50,"Player 2 -");
+ setfillstyle(1,0);
  bar(200,50,240,70);
  bar(400,50,440,70);
- }
+ itoa(p1_c,str,10);
+ outtextxy(200,50,str);
+ itoa(p2_c,str,10);
+ outtextxy(400,50,str);}
 }
-
 void board()
 {
+im.x.ax=2;
+int86(0x33,&im,&om);
 setcolor(6);
 line(5,25,5,475);
 line(5,475,635,475);
@@ -591,19 +608,4 @@ bigin :
    else if(gam==3){cleardevice();loadgame();goto bigin;}
    else if(gam==4){cleardevice();credit();cleardevice();goto bigin;}
    PORTPal(0,0,0,0);
-}
-
-int main(int argc, char* argv[]) {
-    if (argc > 1)
-        multiplier = std::stof(argv[1]);
-
-    initgraph(width, height, multiplier, RenderType::Retro);
-    text_demo();
-    random_pixel_demo();
-    random_line_demo();
-    random_circle_demo();
-    random_rectangle_demo();
-    random_bar_demo();
-    polygon_line_demo();
-    closegraph();
 }
