@@ -100,20 +100,36 @@ void random_rectangle_demo() {
 void random_fillcircle_demo() {
     set_title("RANDOM FILLED CIRCLES");
     cleardevice();
-    const int r = (width + height) / 4;
+    const int radius = (width + height) / 4;
     while (!kbhit()) {
-        setfillstyle(rand() % 20, rgb2color(rand(), rand(), rand()));
-        fillcircle(rand() % width, rand() % height, rand() % r);
+        auto c = rgb2color(rand(), rand(), rand());
+        auto w = rand() % width;
+        auto h = rand() % height;
+        auto r = rand() % radius;
+        setfillstyle(rand() % 11, c);
+        fillcircle(w, h, r);
+        setcolor(c);
+        circle(w, h, r);
+        if (closed())
+            exit(0);
     }
 }
 
 void random_fillellipse_demo() {
     set_title("RANDOM FILLED ELLIPSES");
     cleardevice();
-    const int r = (width + height) / 4;
     while (!kbhit()) {
-        setfillstyle(rand() % 20, rgb2color(rand(), rand(), rand()));
-        fillellipse(rand() % width, rand() % height, rand() % r, rand() % r);
+        auto c = rgb2color(rand(), rand(), rand());
+        auto w = rand() % width;
+        auto h = rand() % height;
+        auto rx = rand() % (width/4);
+        auto ry = rand() % (height/4);
+        setfillstyle(rand() % 11, c);
+        fillellipse(w, h, rx, ry);
+        setcolor(c);
+        ellipse(w, h, rx, ry);
+        if (closed())
+            exit(0);
     }
 }
 
@@ -121,10 +137,15 @@ void random_bar_demo() {
     set_title("RANDOM BAR");
     cleardevice();
     while (!kbhit()) {
-        setfillstyle(rand() % 20, rgb2color(rand(), rand(), rand()));
+        auto c = rgb2color(rand(), rand(), rand());
+        setfillstyle(rand() % 11, c);
+        setcolor(c);
         int left = rand() % width, top = rand() % height;
         int right = rand() % width, bottom = rand() % height;
         bar(left, top, right, bottom);
+        rectangle(left, top, right, bottom);
+        if (closed())
+            exit(0);
     }
 }
 

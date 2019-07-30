@@ -286,7 +286,6 @@ void menu() {
         PORTPal(12, 20 - menu_app / 2, 20 - menu_app / 2, 20 + menu_app);
         if (b == 1)
             gam = 1;
-        delay(33);
         bitblt();
     } else if (mousex > 450 && mousex < 600 && mousey > 160 && mousey < 220) {
         PORTPal(9, 20 + menu_app, 20 + menu_app, 20 + menu_app);
@@ -296,7 +295,6 @@ void menu() {
         PORTPal(12, 20 - menu_app / 2, 20 - menu_app / 2, 20 + menu_app);
         if (b == 1)
             gam = 2;
-        delay(33);
         bitblt();
     } else if (mousex > 450 && mousex < 600 && mousey > 220 && mousey < 280) {
         PORTPal(10, 20 + menu_app, 20 + menu_app, 20 + menu_app);
@@ -306,7 +304,6 @@ void menu() {
         PORTPal(12, 20 - menu_app / 2, 20 - menu_app / 2, 20 + menu_app);
         if (b == 1)
             gam = 3;
-        delay(33);
         bitblt();
     } else if (mousex > 450 && mousex < 600 && mousey > 280 && mousey < 340) {
         PORTPal(11, 20 + menu_app, 20 + menu_app, 20 + menu_app);
@@ -316,7 +313,6 @@ void menu() {
         PORTPal(12, 20 - menu_app / 2, 20 - menu_app / 2, 20 + menu_app);
         if (b == 1)
             gam = 4;
-        delay(33);
         bitblt();
     } else if (mousex > 450 && mousex < 600 && mousey > 340 && mousey < 400) {
         PORTPal(12, 20 + menu_app, 20 + menu_app, 20 + menu_app);
@@ -326,7 +322,6 @@ void menu() {
         PORTPal(8, 20 - menu_app / 2, 20 - menu_app / 2, 20 + menu_app);
         if (b == 1)
             gam = 5;
-        delay(33);
         bitblt();
     } else {
         PORTPal(8, 20 - menu_app / 2, 20 - menu_app / 2, 20 + menu_app);
@@ -334,7 +329,6 @@ void menu() {
         PORTPal(10, 20 - menu_app / 2, 20 - menu_app / 2, 20 + menu_app);
         PORTPal(11, 20 - menu_app / 2, 20 - menu_app / 2, 20 + menu_app);
         PORTPal(12, 20 - menu_app / 2, 20 - menu_app / 2, 20 + menu_app);
-        delay(33);
         bitblt();
     }
 }
@@ -352,7 +346,7 @@ void game() {
     PORTPal(0, 20, 20, 20);
     mademenu();
     board();
-    int b, xp, yp, xs1, ys1, xs2, ys2, flag = 0, chance = 1; // xp-x present xs1-x selected I
+    int b, xp, yp, xs1 = 0, ys1 = 0, xs2, ys2, flag = 0, chance = 1; // xp-x present xs1-x selected I
     while (gam == 0) {
         b = get_button_status();
         if (mousex2() > 450 && mousex2() < 600 && mousey2() > 100 && mousey2() < 400 &&
