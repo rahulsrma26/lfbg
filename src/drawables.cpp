@@ -108,7 +108,7 @@ void bar(int left, int top, int right, int bottom) {
         top = 0;
     if (bottom >= __screen_height__)
         bottom = __screen_height__ - 1;
-    for (; top < bottom; top++)
+    for (; top <= bottom; top++)
         fline(left, right, top);
 }
 
