@@ -64,11 +64,11 @@ void status_report() {
 
 void text_demo() {
     cleardevice();
+    setcolor(COLOR::WHITE);
     settextjustify(TEXT::CENTER, TEXT::CENTER);
     settextstyle(0, 0, 1);
     outtextxy(width / 2, 20, "All text character with ASCII codes");
     settextjustify(TEXT::LEFT, TEXT::TOP);
-    setcolor(COLOR::WHITE);
     setfillstyle(1, COLOR::DARK_GRAY);
     int xo = 10, yo = 80, xm = 40, ym = 40;
     for (int i = 0, k = 0; i < 8; i++) {
@@ -87,81 +87,135 @@ void text_demo() {
 
 void fillstyle_demo() {
     cleardevice();
-    setcolor(COLOR::YELLOW);
-    const int ox = 30, oy = 25, wm = 120, hm = 90, w = 100, h = 80;
+    setcolor(COLOR::WHITE);
+    settextjustify(TEXT::CENTER, TEXT::CENTER);
+    settextstyle(0, 0, 1);
+    outtextxy(width / 2, 20, "All fill styles");
+
+    settextjustify(TEXT::RIGHT, TEXT::CENTER);
+    setcolor(COLOR::CYAN);
+
+    const int ox = 30, oy = 40, wm = 120, hm = 90, w = 90, h = 80;
     for (int i = 0, k = 0; i < 4; i++)
         for (int j = 0; j < 5; j++, k++) {
             setfillstyle(k, COLOR::WHITE);
             bar(ox + wm * j, oy + hm * i, ox + wm * j + w, oy + hm * i + h);
             rectangle(ox + wm * j, oy + hm * i, ox + wm * j + w, oy + hm * i + h);
+            outtextxy(ox + wm * j, oy + hm * i + h / 2, to_string(k));
         }
     wait();
 }
 
-void random_pixel_demo() {
-    set_title("RANDOM PIXELS");
+void custom_fillstyle_demo() {
     cleardevice();
-    while (!kbhit())
+    setcolor(COLOR::WHITE);
+    settextjustify(TEXT::CENTER, TEXT::CENTER);
+    settextstyle(0, 0, 1);
+    outtextxy(width / 2, 20, "Custom fill pattern");
+
+    // 00000000
+    // 01111110
+    // 01010100
+    // 01101000
+    // 01010000
+    // 01100000
+    // 01000000
+    // 00000000
+    uint64_t pattern = 0b0000000001111110010101000110100001010000011000000100000000000000;
+    settextjustify(TEXT::LEFT, TEXT::TOP);
+    string str = "12345678";
+
+    outtextxy(20, 60, "setfillpattern(int64_t)");
+    outtextxy(58, 110, "MSB");
+    outtextxy(208, 310, "LSB");
+    hline(80, 200, 315);
+    line(80, 315, 85, 310);
+    line(80, 315, 85, 320);
+    vline(130, 310, 68);
+    line(68, 130, 63, 135);
+    line(68, 130, 73, 135);
+
+    settextstyle(0, 0, 2);
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0, k = (pattern >> (56 - 8 * i)); j < 8; j++, k <<= 1)
+            str[j] = (k & 0x80) ? '1' : '0';
+        outtextxy(80, 120 + i * 24, str);
+    }
+    setfillpattern(pattern);
+    bar(width / 2, 64, width - 20, height - 32);
+    rectangle(width / 2, 64, width - 20, height - 32);
+    wait();
+}
+
+void random_pixel_demo() {
+    cleardevice();
+    while (!kbhit() && !closed())
         putpixel(rand() % width, rand() % height, rgb2color(rand(), rand(), rand()));
+    if (closed())
+        exit(0);
 }
 
 void random_line_demo() {
-    set_title("RANDOM LINES");
     cleardevice();
-    while (!kbhit()) {
+    while (!kbhit() && !closed()) {
         setcolor(rgb2color(rand(), rand(), rand()));
         int x1 = rand() % width, y1 = rand() % height;
         int x2 = rand() % width, y2 = rand() % height;
         line(x1, y1, x2, y2);
     }
+    if (closed())
+        exit(0);
 }
 
 void random_circle_demo() {
-    set_title("RANDOM CIRCLES");
     cleardevice();
     const int r = (width + height) / 4;
-    while (!kbhit()) {
+    while (!kbhit() && !closed()) {
         setcolor(rgb2color(rand(), rand(), rand()));
         circle(rand() % width, rand() % height, rand() % r);
     }
+    if (closed())
+        exit(0);
 }
 
 void random_ellipse_demo() {
-    set_title("RANDOM ELLIPSES");
     cleardevice();
     const int r = (width + height) / 4;
-    while (!kbhit()) {
+    while (!kbhit() && !closed()) {
         setcolor(rgb2color(rand(), rand(), rand()));
         ellipse(rand() % width, rand() % height, rand() % r, rand() % r);
     }
+    if (closed())
+        exit(0);
 }
 
 void random_arc_demo() {
-    set_title("RANDOM ARCS");
     cleardevice();
     const int r = (width + height) / 4;
-    while (!kbhit()) {
+    while (!kbhit() && !closed()) {
         setcolor(rgb2color(rand(), rand(), rand()));
         arc(rand() % width, rand() % height, rand() % 360, rand() % 360, rand() % r);
     }
+    if (closed())
+        exit(0);
 }
 
 void random_rectangle_demo() {
-    set_title("RANDOM RECTANGLES");
     cleardevice();
-    while (!kbhit()) {
+    while (!kbhit() && !closed()) {
         setcolor(rgb2color(rand(), rand(), rand()));
         int left = rand() % width, top = rand() % height;
         int right = rand() % width, bottom = rand() % height;
         rectangle(left, top, right, bottom);
     }
+    if (closed())
+        exit(0);
 }
 
 void random_fillcircle_demo() {
-    set_title("RANDOM FILLED CIRCLES");
     cleardevice();
     const int radius = (width + height) / 4;
-    while (!kbhit()) {
+    while (!kbhit() && !closed()) {
         auto c = rgb2color(rand(), rand(), rand());
         auto w = rand() % width;
         auto h = rand() % height;
@@ -170,15 +224,14 @@ void random_fillcircle_demo() {
         fillcircle(w, h, r);
         setcolor(c);
         circle(w, h, r);
-        if (closed())
-            exit(0);
     }
+    if (closed())
+        exit(0);
 }
 
 void random_fillellipse_demo() {
-    set_title("RANDOM FILLED ELLIPSES");
     cleardevice();
-    while (!kbhit()) {
+    while (!kbhit() && !closed()) {
         auto c = rgb2color(rand(), rand(), rand());
         auto w = rand() % width;
         auto h = rand() % height;
@@ -188,15 +241,14 @@ void random_fillellipse_demo() {
         fillellipse(w, h, rx, ry);
         setcolor(c);
         ellipse(w, h, rx, ry);
-        if (closed())
-            exit(0);
     }
+    if (closed())
+        exit(0);
 }
 
 void random_bar_demo() {
-    set_title("RANDOM BAR");
     cleardevice();
-    while (!kbhit()) {
+    while (!kbhit() && !closed()) {
         auto c = rgb2color(rand(), rand(), rand());
         setfillstyle(rand() % 11, c);
         setcolor(c);
@@ -204,13 +256,12 @@ void random_bar_demo() {
         int right = rand() % width, bottom = rand() % height;
         bar(left, top, right, bottom);
         rectangle(left, top, right, bottom);
-        if (closed())
-            exit(0);
     }
+    if (closed())
+        exit(0);
 }
 
 void polygon_line_demo() {
-    set_title("POLYGON LINES");
     cleardevice();
     setcolor(COLOR::WHITE);
     constexpr int lim = 14;
@@ -222,9 +273,7 @@ void polygon_line_demo() {
     for (int i = 0; i < lim; i++)
         for (int j = i + 1; j < lim; j++)
             line(x[i], y[i], x[j], y[j]);
-    for (; !kbhit(); delay(200))
-        if (closed())
-            exit(0);
+    wait();
 }
 
 int main(int argc, char* argv[]) {
@@ -235,9 +284,10 @@ int main(int argc, char* argv[]) {
     set_title("DEMO");
     status_report();
     text_demo();
+    fillstyle_demo();
+    custom_fillstyle_demo();
     random_pixel_demo();
     random_line_demo();
-    fillstyle_demo();
     random_circle_demo();
     random_fillcircle_demo();
     random_ellipse_demo();
