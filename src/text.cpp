@@ -2,6 +2,14 @@
 
 namespace lfbg {
 
+namespace TEXT {
+const int LEFT = 0;
+const int RIGHT = 2;
+const int TOP = 0;
+const int BOTTOM = 2;
+const int CENTER = 1;
+} // namespace TEXT
+
 // external objects
 
 extern int __screen_width__, __screen_height__;
@@ -9,9 +17,9 @@ extern std::vector<color> __screen_buffer__;
 extern color __foreground_color__;
 
 // defined objects
-int __font__ = 0, __direction__ = 0, __charsize__ = 0;
-int __text_justify_horizontal__ = LEFT_TEXT;
-int __text_justify_vertical__ = TOP_TEXT;
+int __font__ = 0, __text_direction__ = 0, __text_size__ = 0;
+int __text_justify_horizontal__ = TEXT::LEFT;
+int __text_justify_vertical__ = TEXT::TOP;
 
 float __font_scales__[11] = {1, 0.6, 0.66, 0.75, 1, 1.33, 1.66, 2, 2.5, 3, 4};
 const char* __fontfiles__[11] = {"",         "TRIP.CHR", "LITT.CHR", "SANS.CHR",
@@ -160,7 +168,7 @@ void extract(std::fstream& fin, T* buffer, size_t size) {
 stroke_font loadfont(const char* filepath) {
     stroke_font font;
     std::fstream fin(filepath, std::ios::in | std::ios::binary);
-    if(!fin){
+    if (!fin) {
         std::cerr << filepath << " file not found" << std::endl;
         font.num_chars = 0;
         return font;
@@ -240,15 +248,29 @@ stroke_font loadfont(const char* filepath) {
 
 void outtextxy_stroke(float sx, float sy, const std::string& text) {
     auto& font = __current__font__;
-    const float scale = __font_scales__[__charsize__];
-    if (__text_justify_vertical__ == TOP_TEXT)
-        sy += font.height * scale;
-    else if (__text_justify_vertical__ == CENTER_TEXT)
-        sy += font.height * scale / 2;
-    if (__text_justify_horizontal__ == RIGHT_TEXT)
-        sx -= textwidth(text);
-    else if (__text_justify_horizontal__ == CENTER_TEXT)
-        sx -= textwidth(text) / 2;
+    const float scale = __font_scales__[__text_size__];
+    if (__text_justify_vertical__ != TEXT::BOTTOM) {
+        float delta = font.height * scale;
+        if (__text_justify_vertical__ == TEXT::CENTER)
+            delta /= 2;
+        switch (__text_direction__) {
+            case 1: sx -= delta; break;
+            case 2: sy -= delta; break;
+            case 3: sx += delta; break;
+            default: sy += delta;
+        }
+    }
+    if (__text_justify_horizontal__ != TEXT::LEFT) {
+        float delta = textwidth(text);
+        if (__text_justify_horizontal__ == TEXT::CENTER)
+            delta /= 2;
+        switch (__text_direction__) {
+            case 1: sy -= delta; break;
+            case 2: sx += delta; break;
+            case 3: sy += delta; break;
+            default: sx -= delta;
+        }
+    }
     for (char ch : text) {
         if (ch < font.ascii_offset || ch > font.ascii_offset + font.num_chars)
             return;
@@ -256,9 +278,20 @@ void outtextxy_stroke(float sx, float sy, const std::string& text) {
         for (auto& l : lines) {
             float x1 = l.x1 * scale, y1 = l.y1 * scale;
             float x2 = l.x2 * scale, y2 = l.y2 * scale;
-            line(sx + x1, sy - y1, sx + x2, sy - y2);
+            switch (__text_direction__) {
+                case 1: line(sx + y1, sy + x1, sx + y2, sy + x2); break;
+                case 2: line(sx - x1, sy + y1, sx - x2, sy + y2); break;
+                case 3: line(sx - y1, sy - x1, sx - y2, sy - x2); break;
+                default: line(sx + x1, sy - y1, sx + x2, sy - y2);
+            }
         }
-        sx += font.widths[ch - font.ascii_offset] * scale;
+        const float delta = font.widths[ch - font.ascii_offset] * scale;
+        switch (__text_direction__) {
+            case 1: sy += delta; break;
+            case 2: sx -= delta; break;
+            case 3: sy -= delta; break;
+            default: sx += delta;
+        }
     }
 }
 
@@ -273,7 +306,7 @@ int textwidth(const std::string& text) {
     if (!__font__)
         return 8 * text.length();
     auto& font = __current__font__;
-    const float scale = __font_scales__[__charsize__];
+    const float scale = __font_scales__[__text_size__];
     int width = 0;
     for (char ch : text)
         if (font.ascii_offset <= ch && ch < font.ascii_offset + font.num_chars)
@@ -285,7 +318,7 @@ int textheight(const std::string& text) {
     if (!__font__)
         return 12;
     std::ignore = text;
-    return __current__font__.height * __font_scales__[__charsize__];
+    return __current__font__.height * __font_scales__[__text_size__];
 }
 
 void settextstyle(int font, int direction, int charsize) {
@@ -294,13 +327,13 @@ void settextstyle(int font, int direction, int charsize) {
         __font__ = font;
         if (__font__) {
             __current__font__ = loadfont(__fontfiles__[__font__]);
-            if(__current__font__.num_chars == 0)
+            if (__current__font__.num_chars == 0)
                 __font__ = 0;
             // __current__font__.info();
         }
     }
-    __direction__ = direction;
-    __charsize__ = std::clamp(charsize, 0, 10);
+    __text_direction__ = direction;
+    __text_size__ = std::clamp(charsize, 0, 10);
 }
 
 void settextjustify(int horizontal, int vertical) {

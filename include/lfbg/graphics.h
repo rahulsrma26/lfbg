@@ -40,16 +40,13 @@ extern const color YELLOW;
 extern const color WHITE;
 } // namespace COLOR
 
- // Text directions.
- #define HORIZ_DIR 0
- #define VERT_DIR 1
-
- // Text justification.
- #define LEFT_TEXT 0
- #define BOTTOM_TEXT 0
- #define CENTER_TEXT 1
- #define RIGHT_TEXT 2
- #define TOP_TEXT 2
+namespace TEXT {
+extern const int LEFT;
+extern const int RIGHT;
+extern const int TOP;
+extern const int BOTTOM;
+extern const int CENTER;
+} // namespace TEXT
 
 enum class RenderType { Retro, Smooth };
 

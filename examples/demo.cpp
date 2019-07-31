@@ -8,6 +8,28 @@ using namespace lfbg;
 constexpr int width = 640, height = 400;
 float multiplier = 1;
 
+void status_report() {
+    setcolor(COLOR::WHITE);
+    do {
+        cleardevice();
+        int x = 20, y = 20, g = 20;
+        outtextxy(180, 4, "STATUS REPORT");
+        outtextxy(200, height - 12, "Press Esc to end or any other key for next demo");
+        rectangle(0, 20, width - 1, height - 20);
+        outtextxy(x, y+=g, "Window Resolution");
+        auto [wx, wy] = get_window_size();
+        outtextxy(width/2, y, ": " + to_string(wx) + " x " + to_string(wy));
+        outtextxy(20, y+=g, "Screen Resolution");
+        auto [bx, by] = get_buffer_size();
+        outtextxy(width/2, y, ": " + to_string(bx) + " x " + to_string(by));
+        outtextxy(20, y+=g, "Cursor position");
+        auto [cx, cy] = get_cursor_pos();
+        outtextxy(width/2, y, ": " + to_string(cx) + " x " + to_string(cy));
+        if (closed())
+            exit(0);
+    } while (!kbhit());
+}
+
 void text_demo() {
     set_title("TEXT");
     string s(16, ' ');
@@ -122,8 +144,8 @@ void random_fillellipse_demo() {
         auto c = rgb2color(rand(), rand(), rand());
         auto w = rand() % width;
         auto h = rand() % height;
-        auto rx = rand() % (width/4);
-        auto ry = rand() % (height/4);
+        auto rx = rand() % (width / 4);
+        auto ry = rand() % (height / 4);
         setfillstyle(rand() % 11, c);
         fillellipse(w, h, rx, ry);
         setcolor(c);
@@ -172,6 +194,8 @@ int main(int argc, char* argv[]) {
         multiplier = std::stof(argv[1]);
 
     initgraph(width, height, multiplier, RenderType::Retro);
+    set_title("DEMO");
+    status_report();
     text_demo();
     random_pixel_demo();
     random_line_demo();

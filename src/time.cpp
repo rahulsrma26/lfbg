@@ -39,7 +39,7 @@ void update_fps(){
             double fps = __frames_till_last_fps__ / delta;
             // if (__last_fps__ > 0)
             //     fps = 0.3 * fps + 0.7 * __last_fps__;
-            std::string title = __window_title__ + " fps: " + std::to_string(fps);
+            std::string title = __window_title__ + " [fps: " + std::to_string(fps) + "]";
             glfwSetWindowTitle(__window_handle__, title.c_str());
             __frames_till_last_fps__ = 0;
             __last_time__ = curTime;
