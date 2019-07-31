@@ -8,44 +8,84 @@ using namespace lfbg;
 constexpr int width = 640, height = 400;
 float multiplier = 1;
 
+void wait() {
+    for (; !kbhit(); delay(200))
+        if (closed())
+            exit(0);
+    if (closed())
+        exit(0);
+}
+
 void status_report() {
     setcolor(COLOR::WHITE);
     do {
         cleardevice();
-        int x = 20, y = 20, g = 20;
-        outtextxy(180, 4, "STATUS REPORT");
-        outtextxy(200, height - 12, "Press Esc to end or any other key for next demo");
+        int y = 10, g = 20;
+        settextjustify(TEXT::CENTER, TEXT::CENTER);
+        outtextxy(width / 2, y, "STATUS REPORT");
+        outtextxy(width / 2, height - 10, "Press Esc to end or any other key for next demo");
         rectangle(0, 20, width - 1, height - 20);
-        outtextxy(x, y+=g, "Window Resolution");
+
+        settextjustify(TEXT::RIGHT, TEXT::CENTER);
+        outtextxy(width / 2, y += g, "Window Resolution");
         auto [wx, wy] = get_window_size();
-        outtextxy(width/2, y, ": " + to_string(wx) + " x " + to_string(wy));
-        outtextxy(20, y+=g, "Screen Resolution");
+        settextjustify(TEXT::LEFT, TEXT::CENTER);
+        outtextxy(width / 2, y, ": " + to_string(wx) + " x " + to_string(wy));
+
+        settextjustify(TEXT::RIGHT, TEXT::CENTER);
+        outtextxy(width / 2, y += g, "Screen Resolution");
         auto [bx, by] = get_buffer_size();
-        outtextxy(width/2, y, ": " + to_string(bx) + " x " + to_string(by));
-        outtextxy(20, y+=g, "Cursor position");
+        settextjustify(TEXT::LEFT, TEXT::CENTER);
+        outtextxy(width / 2, y, ": " + to_string(bx) + " x " + to_string(by));
+
+        settextjustify(TEXT::RIGHT, TEXT::CENTER);
+        outtextxy(width / 2, y += g, "Cursor position");
         auto [cx, cy] = get_cursor_pos();
-        outtextxy(width/2, y, ": " + to_string(cx) + " x " + to_string(cy));
+        settextjustify(TEXT::LEFT, TEXT::CENTER);
+        outtextxy(width / 2, y, ": " + to_string(cx) + " x " + to_string(cy));
+
+        settextjustify(TEXT::RIGHT, TEXT::CENTER);
+        outtextxy(width / 2, y += g, "Mouse buttons");
+        int b = get_button_status();
+        string bs = "";
+        if (b & 1)
+            bs += "LEFT ";
+        if (b & 2)
+            bs += "RIGHT ";
+        if (b & 4)
+            bs += "MIDDLE ";
+        settextjustify(TEXT::LEFT, TEXT::CENTER);
+        outtextxy(width / 2, y, ": " + bs);
+
         if (closed())
             exit(0);
     } while (!kbhit());
 }
 
 void text_demo() {
-    set_title("TEXT");
-    string s(16, ' ');
-    for (int i = 0; i < 128; i += 16) {
-        for (int j = 0; j < 16; j++)
-            s[j] = i + j;
-        outtextxy(0, 12 * (i / 16), s);
+    cleardevice();
+    settextjustify(TEXT::CENTER, TEXT::CENTER);
+    settextstyle(0, 0, 1);
+    outtextxy(width / 2, 20, "All text character with ASCII codes");
+    settextjustify(TEXT::LEFT, TEXT::TOP);
+    setcolor(COLOR::WHITE);
+    setfillstyle(1, COLOR::DARK_GRAY);
+    int xo = 10, yo = 80, xm = 40, ym = 40;
+    for (int i = 0, k = 0; i < 8; i++) {
+        for (int j = 0; j < 16; j++, k++) {
+            bar(xo + j * xm, yo + i * ym, xo + j * xm + 15, yo + i * ym + 23);
+            settextstyle(0, 0, 1);
+            outtextxy(xo + j * xm, yo + i * ym - 12, to_string(k));
+            settextstyle(0, 0, 2);
+            string s = " ";
+            s[0] = k;
+            outtextxy(xo + j * xm, yo + i * ym, s);
+        }
     }
-    outtextxy(0, 12 * 8, "press any key for next demo.");
-    for (; !kbhit(); delay(200))
-        if (closed())
-            exit(0);
+    wait();
 }
 
 void fillstyle_demo() {
-    set_title("FILL STYLES");
     cleardevice();
     setcolor(COLOR::YELLOW);
     const int ox = 30, oy = 25, wm = 120, hm = 90, w = 100, h = 80;
@@ -55,9 +95,7 @@ void fillstyle_demo() {
             bar(ox + wm * j, oy + hm * i, ox + wm * j + w, oy + hm * i + h);
             rectangle(ox + wm * j, oy + hm * i, ox + wm * j + w, oy + hm * i + h);
         }
-    for (; !kbhit(); delay(200))
-        if (closed())
-            exit(0);
+    wait();
 }
 
 void random_pixel_demo() {

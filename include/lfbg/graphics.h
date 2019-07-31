@@ -90,6 +90,9 @@ color rgb2color(int r, int g, int b);
 
 // drawables
 void setfillstyle(int style, color);
+void setfillpattern(uint64_t pattern8x8);
+uint64_t getfillpattern();
+color getfillcolor();
 void line(int x1, int y1, int x2, int y2);
 void circle(int x, int y, int r);
 void arc(int x, int y, int start, int end, int r);
@@ -100,6 +103,7 @@ void hline(int x1, int x2, int y);
 void vline(int y1, int y2, int x);
 void rectangle(int left, int top, int right, int bottom);
 void bar(int left, int top, int right, int bottom);
+void bigpixel(int left, int top, int right, int bottom);
 void floodfill(int x, int y, color border);
 
 // text

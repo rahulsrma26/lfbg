@@ -11,6 +11,14 @@ int main(int argc, char* argv[]) {
     if (argc > 1)
         multiplier = std::stof(argv[1]);
 
+    int font = 1;
+    if (argc > 2)
+        font = std::stoi(argv[2]);
+
+    int size = 0;
+    if (argc > 3)
+        size = std::stoi(argv[3]);
+
     initgraph(w, h, multiplier, RenderType::Retro, 1);
     enable_palette();
     auto show = [=](int x, int y, const string& t) {
@@ -28,13 +36,13 @@ int main(int argc, char* argv[]) {
     for (int key = 1; !closed(); key = kbhit()) {
         cleardevice(1);
         settextjustify(hori, vert);
-        settextstyle(1, 0, 4);
+        settextstyle(font, 0, size);
         show(220, 160, "RAHUL");
-        settextstyle(1, 1, 4);
+        settextstyle(font, 1, size);
         show(440, 160, "RAHUL");
-        settextstyle(1, 2, 4);
+        settextstyle(font, 2, size);
         show(440, 320, "RAHUL");
-        settextstyle(1, 3, 4);
+        settextstyle(font, 3, size);
         show(220, 320, "RAHUL");
 
         switch (key) {

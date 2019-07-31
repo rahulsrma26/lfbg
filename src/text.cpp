@@ -17,7 +17,7 @@ extern std::vector<color> __screen_buffer__;
 extern color __foreground_color__;
 
 // defined objects
-int __font__ = 0, __text_direction__ = 0, __text_size__ = 0;
+int __font__ = 0, __text_direction__ = 0, __text_size__ = 1;
 int __text_justify_horizontal__ = TEXT::LEFT;
 int __text_justify_vertical__ = TEXT::TOP;
 
@@ -78,44 +78,109 @@ uint32_t __default_font__[128 * 3] = {
 
 // functions
 
-void outtextxy_raster(int x, int y, const std::string& text) {
-    if (y <= -12 || y >= __screen_height__)
-        return;
-    const int tl = 8 * text.length();
-    if (x <= -tl || x >= __screen_width__)
-        return;
-    const int sy = std::max(y, 0), ey = std::min(y + 12, __screen_height__);
-    unsigned char* font = (unsigned char*)__default_font__;
-    int st = std::max(0, -x / 8);
-    if (x < 0) {
-        x %= 8;
-        if (x != 0) {
-            char c = text[st];
-            for (int j = sy; j < ey; j++)
-                for (int i = 0, v = font[c * 12 + j - y] >> -x; i < 8 + x; i++, v /= 2)
-                    if (v & 1)
-                        __screen_buffer__[j * __screen_width__ + i] = __foreground_color__;
-            x += 8; // 12x30
-            st++;
+void outtextxy_raster(int sx, int sy, const std::string& text) {
+    if (__text_justify_vertical__ != TEXT::TOP) {
+        int delta = 12 * __text_size__;
+        if (__text_justify_vertical__ == TEXT::CENTER)
+            delta /= 2;
+        switch (__text_direction__) {
+            case 1: sx += delta; break;
+            case 2: sy += delta; break;
+            case 3: sx -= delta; break;
+            default: sy -= delta;
         }
     }
-    int et = std::min(__screen_width__ - x, tl) / 8;
-    for (; st < et; st++, x += 8) {
-        char c = text[st];
-        for (int j = sy; j < ey; j++)
-            for (int i = 0, v = font[c * 12 + j - y]; i < 8; i++, v /= 2)
-                if (v & 1)
-                    __screen_buffer__[j * __screen_width__ + i + x] = __foreground_color__;
+    if (__text_justify_horizontal__ != TEXT::LEFT) {
+        int delta = text.length() * 8 * __text_size__;
+        if (__text_justify_horizontal__ == TEXT::CENTER)
+            delta /= 2;
+        switch (__text_direction__) {
+            case 1: sy -= delta; break;
+            case 2: sx += delta; break;
+            case 3: sy += delta; break;
+            default: sx -= delta;
+        }
     }
-    if (st < tl) {
-        const int ex = __screen_width__ - x;
-        char c = text[st];
-        for (int j = sy; j < ey; j++)
-            for (int i = 0, v = font[c * 12 + j - y]; i < ex; i++, v /= 2)
-                if (v & 1)
-                    __screen_buffer__[j * __screen_width__ + i + x] = __foreground_color__;
+    const int bs = __text_size__ - 1;
+    for (char ch : text) {
+        auto font = (unsigned char*)(__default_font__) + ch * 12;
+        int il = 12 * __text_size__, jl = 8 * __text_size__;
+        for (int i = 0; i < il; i += __text_size__, font++)
+            for (int j = 0, k = *font; j < jl; j += __text_size__, k /= 2)
+                if (k & 1)
+                    switch (__text_direction__) {
+                        case 1:
+                            if (bs)
+                                bigpixel(sx - i, sy + j, sx - i + bs, sy + j + bs);
+                            else
+                                putpixel(sx - i, sy + j, __foreground_color__);
+                            break;
+                        case 2:
+                            if (bs)
+                                bigpixel(sx - j, sy - i, sx - j + bs, sy - i + bs);
+                            else
+                                putpixel(sx - j, sy - i, __foreground_color__);
+                            break;
+                        case 3:
+                            if (bs)
+                                bigpixel(sx + i, sy - j, sx + i + bs, sy - j + bs);
+                            else
+                                putpixel(sx + i, sy - j, __foreground_color__);
+                            break;
+                        default:
+                            if (bs)
+                                bigpixel(sx + j, sy + i, sx + j + bs, sy + i + bs);
+                            else
+                                putpixel(sx + j, sy + i, __foreground_color__);
+                    }
+        const float delta = 8 * __text_size__;
+        switch (__text_direction__) {
+            case 1: sy += delta; break;
+            case 2: sx -= delta; break;
+            case 3: sy -= delta; break;
+            default: sx += delta;
+        }
     }
 }
+
+// void outtextxy_raster(int x, int y, const std::string& text) {
+//     if (y <= -12 || y >= __screen_height__)
+//         return;
+//     const int tl = 8 * text.length();
+//     if (x <= -tl || x >= __screen_width__)
+//         return;
+//     const int sy = std::max(y, 0), ey = std::min(y + 12, __screen_height__);
+//     unsigned char* font = (unsigned char*)__default_font__;
+//     int st = std::max(0, -x / 8);
+//     if (x < 0) {
+//         x %= 8;
+//         if (x != 0) {
+//             char c = text[st];
+//             for (int j = sy; j < ey; j++)
+//                 for (int i = 0, v = font[c * 12 + j - y] >> -x; i < 8 + x; i++, v /= 2)
+//                     if (v & 1)
+//                         __screen_buffer__[j * __screen_width__ + i] = __foreground_color__;
+//             x += 8; // 12x30
+//             st++;
+//         }
+//     }
+//     int et = std::min(__screen_width__ - x, tl) / 8;
+//     for (; st < et; st++, x += 8) {
+//         char c = text[st];
+//         for (int j = sy; j < ey; j++)
+//             for (int i = 0, v = font[c * 12 + j - y]; i < 8; i++, v /= 2)
+//                 if (v & 1)
+//                     __screen_buffer__[j * __screen_width__ + i + x] = __foreground_color__;
+//     }
+//     if (st < tl) {
+//         const int ex = __screen_width__ - x;
+//         char c = text[st];
+//         for (int j = sy; j < ey; j++)
+//             for (int i = 0, v = font[c * 12 + j - y]; i < ex; i++, v /= 2)
+//                 if (v & 1)
+//                     __screen_buffer__[j * __screen_width__ + i + x] = __foreground_color__;
+//     }
+// }
 
 struct font_line {
     int8_t x1;
@@ -334,6 +399,8 @@ void settextstyle(int font, int direction, int charsize) {
     }
     __text_direction__ = direction;
     __text_size__ = std::clamp(charsize, 0, 10);
+    if (!__font__ && !__text_size__)
+        __text_size__ = 1;
 }
 
 void settextjustify(int horizontal, int vertical) {

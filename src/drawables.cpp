@@ -29,11 +29,21 @@ uint64_t __fill_patterns__[20] = {0,
 0x331B0F1B331B0F00};
 uint64_t __fill_pattern__ = __fill_patterns__[1];
 
-// #include <bitset>
 void setfillstyle(int style, color c) {
     __fill_pattern__ = __fill_patterns__[std::clamp(style, 0, 19)];
-    // std::cout << "fill: " << std::bitset<64>(__fill_pattern__) << std::endl;
     __fill_color__ = c;
+}
+
+void setfillpattern(uint64_t pattern8x8){
+    __fill_pattern__ = pattern8x8;
+}
+
+uint64_t getfillpattern(){
+    return __fill_pattern__;
+}
+
+color getfillcolor(){
+    return __fill_color__;
 }
 
 void fline(int x1, int x2, int y) {
@@ -100,10 +110,27 @@ void bar(int left, int top, int right, int bottom) {
         bottom = __screen_height__ - 1;
     for (; top < bottom; top++)
         fline(left, right, top);
-    // auto begin = __screen_buffer__.begin() + left;
-    // auto end = __screen_buffer__.begin() + right + 1;
-    // for (int offset = top * __screen_width__; top <= bottom; top++, offset += __screen_width__)
-    //     std::fill(begin + offset, end + offset, __fill_color__);
+}
+
+void bigpixel(int left, int top, int right, int bottom) {
+    if (left > right)
+        std::swap(left, right);
+    if (top > bottom)
+        std::swap(top, bottom);
+    if (right < 0 || left >= __screen_width__ || bottom < 0 || top >= __screen_height__)
+        return;
+    if (left < 0)
+        left = 0;
+    if (right >= __screen_width__)
+        right = __screen_width__ - 1;
+    if (top < 0)
+        top = 0;
+    if (bottom >= __screen_height__)
+        bottom = __screen_height__ - 1;
+    auto begin = __screen_buffer__.begin() + left;
+    auto end = __screen_buffer__.begin() + right + 1;
+    for (int offset = top * __screen_width__; top <= bottom; top++, offset += __screen_width__)
+        std::fill(begin + offset, end + offset, __foreground_color__);
 }
 
 void floodfill(int x, int y, color border) {
