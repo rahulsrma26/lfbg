@@ -105,6 +105,7 @@ void rectangle(int left, int top, int right, int bottom);
 void bar(int left, int top, int right, int bottom);
 void bigpixel(int left, int top, int right, int bottom);
 void floodfill(int x, int y, color border);
+void filltriangle(int x1, int y1, int x2, int y2, int x3, int y3);
 
 // text
 void outtextxy(int x, int y, const std::string& text);

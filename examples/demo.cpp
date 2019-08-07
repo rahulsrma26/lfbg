@@ -276,6 +276,17 @@ void polygon_line_demo() {
     wait();
 }
 
+void random_filltriangle_demo() {
+    cleardevice();
+    do {
+        setfillstyle(1, rgb2color(rand(), rand(), rand()));
+        filltriangle(rand() % width, rand() % height, rand() % width, rand() % height,
+                     rand() % width, rand() % height);
+        if (closed())
+            exit(0);
+    } while (!kbhit());
+}
+
 int main(int argc, char* argv[]) {
     if (argc > 1)
         multiplier = std::stof(argv[1]);
@@ -296,5 +307,6 @@ int main(int argc, char* argv[]) {
     random_rectangle_demo();
     random_bar_demo();
     polygon_line_demo();
+    random_filltriangle_demo();
     closegraph();
 }

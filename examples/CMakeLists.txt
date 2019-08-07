@@ -18,5 +18,8 @@ target_link_libraries(mouse lfbg)
 add_executable(vga vga.cpp)
 target_link_libraries(vga lfbg)
 
+add_executable(text_demo text_demo.cpp)
+target_link_libraries(text_demo lfbg)
+
 add_executable(test test.cpp)
 target_link_libraries(test lfbg)
