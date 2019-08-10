@@ -126,6 +126,8 @@ GLFWwindow* initgraph(int width, int height, float multiplier, RenderType rt, in
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
     glEnable(GL_TEXTURE_2D);
+    // glEnable(GL_CULL_FACE);
+    // glFrontFace(GL_CW);
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
@@ -156,6 +158,7 @@ GLFWwindow* initgraph(int width, int height, float multiplier, RenderType rt, in
 
 void closegraph() {
     glfwDestroyWindow(__window_handle__);
+    glDeleteTextures(1, &__screen_texture_id__);
     glfwTerminate();
     exit(EXIT_SUCCESS);
 }
