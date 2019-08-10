@@ -19,6 +19,7 @@
 #include <sstream>
 
 namespace lfbg {
+
 typedef uint32_t color;
 
 namespace COLOR {
@@ -49,6 +50,8 @@ extern const int CENTER;
 } // namespace TEXT
 
 enum class RenderType { Retro, Smooth };
+
+enum class Dithering { None, ErrorDiffusion, Ordered };
 
 struct window_helper {
     std::function<void(int, int)> window_resize_callback;
@@ -87,7 +90,9 @@ void disable_palette();
 bool using_palette();
 void set_palette(int idx, color);
 color get_palette(int idx);
-color rgb2color(int r, int g, int b);
+void restricted_palette(bool, Dithering);
+color rgb2color(uint8_t r, uint8_t g, uint8_t b);
+std::tuple<uint8_t, uint8_t, uint8_t> color2rgb(color c);
 
 // drawables
 void setfillstyle(int style, color);

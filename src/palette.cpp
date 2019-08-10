@@ -2,7 +2,12 @@
 
 namespace lfbg {
 
+extern int __screen_width__, __screen_height__;
+
 bool __use_palette__ = false;
+bool __restricted_palette__ = false;
+Dithering __dithering__ = Dithering::None;
+int __palette_size__ = 256;
 std::vector<color> __palette_output_buffer__;
 
 color __palette__[256] = { // Default VGA Palette
@@ -36,6 +41,50 @@ color __palette__[256] = { // Default VGA Palette
     0x767676, 0x808080, 0x8a8a8a, 0x949494, 0x9e9e9e, 0xa8a8a8, 0xb2b2b2, 0xbcbcbc, 0xc6c6c6,
     0xd0d0d0, 0xdadada, 0xe4e4e4, 0xeeeeee};
 
+constexpr int __palette_r_bits__ = 6;
+constexpr int __palette_g_bits__ = 7;
+constexpr int __palette_b_bits__ = 6;
+constexpr int __palette_r_size__ = 1 << __palette_r_bits__;
+constexpr int __palette_g_size__ = 1 << __palette_g_bits__;
+constexpr int __palette_b_size__ = 1 << __palette_b_bits__;
+
+unsigned char __reverse_palette__[__palette_r_size__ * __palette_g_size__ * __palette_b_size__];
+
+void calc_palette() {
+    for (int r = 0; r < __palette_r_size__; r++)
+        for (int g = 0; g < __palette_g_size__; g++)
+            for (int b = 0; b < __palette_b_size__; b++) {
+                int mind = 1 << 24, mini = 0;
+                for (int i = 0; i < __palette_size__; i++) {
+                    int x = (__palette__[i] & 255) >> (8 - __palette_r_bits__);
+                    int y = ((__palette__[i] >> 8) & 255) >> (8 - __palette_g_bits__);
+                    int z = ((__palette__[i] >> 16) & 255) >> (8 - __palette_b_bits__);
+                    int d = (r - x) * (r - x) + (g - y) * (g - y) + (b - z) * (b - z);
+                    if (d < mind) {
+                        mind = d;
+                        mini = i;
+                    }
+                }
+                __reverse_palette__[(b << (__palette_r_bits__ + __palette_g_bits__)) |
+                                    (g << __palette_r_bits__) | r] = mini;
+            }
+}
+
+inline uint8_t nearest_palette_color(color c) {
+    int r = (c & 255) >> (8 - __palette_r_bits__);
+    int g = ((c >> 8) & 255) >> (8 - __palette_g_bits__);
+    int b = ((c >> 16) & 255) >> (8 - __palette_b_bits__);
+    return __reverse_palette__[(b << (__palette_r_bits__ + __palette_g_bits__)) |
+                               (g << __palette_r_bits__) | r];
+}
+
+void restricted_palette(bool restrict, Dithering dithering) {
+    __restricted_palette__ = restrict;
+    if (__restricted_palette__)
+        calc_palette();
+    __dithering__ = dithering;
+}
+
 void enable_palette() { __use_palette__ = true; }
 
 void disable_palette() { __use_palette__ = false; }
@@ -46,8 +95,41 @@ std::vector<color>& apply_palette(const std::vector<color>& buffer) {
     const size_t n = buffer.size();
     if (__palette_output_buffer__.size() != n)
         __palette_output_buffer__.resize(n);
-    for (size_t i = 0; i < n; i++)
-        __palette_output_buffer__[i] = __palette__[buffer[i] & 0xff];
+    if (__restricted_palette__) {
+        if (__dithering__ == Dithering::None) {
+            for (size_t i = 0; i < n; i++)
+                __palette_output_buffer__[i] = __palette__[nearest_palette_color(buffer[i])];
+        } else if (__dithering__ == Dithering::Ordered) {
+            std::copy(buffer.begin(), buffer.end(), __palette_output_buffer__.begin());
+            for (int i = 0, k = 0; i < __screen_height__; i++)
+                for (int j = 0; j < __screen_width__; j++, k++) {
+                    color old = __palette_output_buffer__[k];
+                    uint8_t* c1 = (uint8_t*)&old;
+                    __palette_output_buffer__[k] =
+                        __palette__[nearest_palette_color(__palette_output_buffer__[k])];
+                    uint8_t* c = (uint8_t*)&__palette_output_buffer__[k];
+                    for (int l = 0; l < 3; l++) {
+                        int e = (int)(c1[l]) - c[l];
+                        if (j + 1 < __screen_width__)
+                            c[l + 4] = std::clamp((int)(c[l + 4]) + e * 7 / 16, 0, 255);
+                        if (j - 1 >= 0 && i + 1 < __screen_height__) {
+                            const int idx = l + 4*__screen_width__ - 1;
+                            c[idx] = std::clamp(int(c[idx]) + e * 3 / 16, 0, 255);
+                        }
+                        if (i + 1 < __screen_height__) {
+                            const int idx = l + 4*__screen_width__;
+                            c[idx] = std::clamp((int)(c[idx]) + e * 5 / 16, 0, 255);
+                        }
+                        if (j + 1 < __screen_width__ && i + 1 < __screen_height__){
+                            const int idx = l + 4*__screen_width__ + 1;
+                            c[idx] = std::clamp((int)(c[idx]) + e * 1 / 16, 0, 255);
+                        }
+                    }
+                }
+        }
+    } else
+        for (size_t i = 0; i < n; i++)
+            __palette_output_buffer__[i] = __palette__[buffer[i] & 0xff];
     return __palette_output_buffer__;
 }
 

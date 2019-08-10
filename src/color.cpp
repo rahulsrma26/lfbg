@@ -21,6 +21,10 @@ const color YELLOW = 0xFFFF55;
 const color WHITE = 0xFFFFFF;
 } // namespace COLOR
 
-color rgb2color(int r, int g, int b) { return ((b & 255) << 16) | ((g & 255) << 8) | (r & 255); }
+color rgb2color(uint8_t r, uint8_t g, uint8_t b) { return (b << 16) | (g << 8) | r; }
+
+std::tuple<uint8_t, uint8_t, uint8_t> color2rgb(color c) {
+    return {(c & 255), ((c >> 8) & 255), ((c >> 16) & 255)};
+}
 
 } // namespace lfbg

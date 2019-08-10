@@ -279,7 +279,7 @@ void polygon_line_demo() {
 void random_filltriangle_demo() {
     cleardevice();
     do {
-        setfillstyle(1, rgb2color(rand(), rand(), rand()));
+        setfillstyle(rand() % 11, rgb2color(rand(), rand(), rand()));
         filltriangle(rand() % width, rand() % height, rand() % width, rand() % height,
                      rand() % width, rand() % height);
         if (closed())
