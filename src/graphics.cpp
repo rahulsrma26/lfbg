@@ -59,6 +59,8 @@ void set_default_window_resize_callback() {
 // core
 // ----------------------------------------------------------------------------
 
+GLFWwindow* get_window_handle() { return __window_handle__; }
+
 GLFWwindow* initgraph(int width, int height, float multiplier, RenderType rt, int swap_interval) {
     __screen_width__ = width;
     __screen_height__ = height;

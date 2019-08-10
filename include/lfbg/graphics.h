@@ -62,6 +62,7 @@ GLFWwindow* initgraph(int width, int height, float multiplier = 1,
                       RenderType rt = RenderType::Retro, int swap_interval = 0);
 void closegraph();
 void bitblt();
+GLFWwindow* get_window_handle();
 
 // basic
 void cleardevice(color c = COLOR::BLACK);
@@ -125,12 +126,14 @@ void set_keyboard_callback(std::function<void(int, int, int, int)> callback);
 
 // mouse
 void mbreset();
+void set_cursor_pos(double x, double y);
 std::pair<double, double> get_cursor_pos();
 bool is_button_pressed(int button);
 bool is_button_down(int button);
 bool is_button_up(int button);
 int get_button_status();
 void set_default_cursor_pos_callback();
+void set_raw_cursor_pos_callback();
 void set_default_mouse_button_callback();
 void set_cursor_pos_callback(std::function<void(double, double)> callback);
 void set_mouse_button_callback(std::function<void(int, int, int)> callback);

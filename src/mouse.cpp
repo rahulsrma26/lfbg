@@ -16,6 +16,7 @@ int __cursor_scale_x__ = 0, __cursor_scale_y__ = 0;
 int __mouse_is_pressed__;
 int __mouse_is_up__;
 int __mouse_is_down__;
+bool __mouse_raw_motion__ = false;
 
 std::function<void(double, double)> __cursor_pos_callback__;
 auto __default_cursor_pos_callback__ = [](double, double) {};
@@ -25,6 +26,12 @@ auto __cursor_pos_compute_callback__ = [](double xpos, double ypos) {
     __cursor_x__ = std::clamp(__cursor_x__, 0.0, __screen_width__ - 1e-6);
     __cursor_y__ = (ypos - __cursor_offset_y__) * __screen_height__ / __cursor_scale_y__;
     __cursor_y__ = std::clamp(__cursor_y__, 0.0, __screen_height__ - 1e-6);
+    __cursor_pos_callback__(__cursor_x__, __cursor_y__);
+};
+
+auto __raw_cursor_pos_compute_callback__ = [](double xpos, double ypos) {
+    __cursor_x__ = xpos;
+    __cursor_y__ = ypos;
     __cursor_pos_callback__(__cursor_x__, __cursor_y__);
 };
 
@@ -42,9 +49,18 @@ auto __default_mouse_button_callback__ = [](int button, int action, int) {
 
 void mbreset() { __mouse_is_up__ = __mouse_is_down__ = 0; }
 
+void set_raw_cursor_pos_callback() {
+    if (glfwRawMouseMotionSupported()) {
+        glfwSetInputMode(__window_handle__, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+        __window__helper_obj__.cursor_pos_callback = __raw_cursor_pos_compute_callback__;
+        __mouse_raw_motion__ = true;
+    }
+}
+
 void set_default_cursor_pos_callback() {
     __cursor_pos_callback__ = __default_cursor_pos_callback__;
     __window__helper_obj__.cursor_pos_callback = __cursor_pos_compute_callback__;
+    __mouse_raw_motion__ = false;
 }
 
 void set_cursor_pos_callback(std::function<void(double, double)> callback) {
@@ -57,6 +73,18 @@ void set_default_mouse_button_callback() {
 
 void set_mouse_button_callback(std::function<void(int, int, int)> callback) {
     __window__helper_obj__.mouse_button_callback = callback;
+}
+
+void set_cursor_pos(double x, double y) {
+    __cursor_x__ = x;
+    __cursor_y__ = y;
+    if (!__mouse_raw_motion__) {
+        x = std::clamp(x, 0.0, __screen_width__ - 1e-6);
+        x = x * __cursor_scale_x__ / __screen_width__ + __cursor_offset_x__;
+        y = std::clamp(y, 0.0, __screen_height__ - 1e-6);
+        y = y * __cursor_scale_y__ / __screen_height__ + __cursor_offset_y__;
+    }
+    glfwSetCursorPos(__window_handle__, x, y);
 }
 
 std::pair<double, double> get_cursor_pos() { return {__cursor_x__, __cursor_y__}; }
