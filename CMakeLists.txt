@@ -4,6 +4,7 @@ project(lfbg VERSION 0.1.1 DESCRIPTION "graphics library for my old dos codes th
 
 option(BUILD_EXAMPLES "Build the example programs" ON)
 option(BUILD_DOS "Build the dos programs" ON)
+option(BUILD_CHECKERS "Build the checkers" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -49,3 +50,7 @@ endif()
 if (BUILD_DOS)
     add_subdirectory(tc_projects)
 endif()
+
+# if (BUILD_CHECKERS)
+#     add_subdirectory(checkers)
+# endif()
