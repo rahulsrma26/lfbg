@@ -49,9 +49,19 @@ extern const int BOTTOM;
 extern const int CENTER;
 } // namespace TEXT
 
+
 enum class RenderType { Retro, Smooth };
 
-enum class Dithering { None, ErrorDiffusion, Ordered };
+enum class ColorOptimization { None, Threshold, FloydSteinberg, FilterLite, Ordered2x2, Ordered4x4 };
+
+struct Image{
+    uint8_t bit_depth;
+    int width, height;
+    std::vector<uint8_t> palette;
+    std::vector<uint8_t> pixels;
+    void draw(int x, int y) const;
+    static Image fromBMP(const char* fname);
+};
 
 struct window_helper {
     std::function<void(int, int)> window_resize_callback;
@@ -65,6 +75,7 @@ GLFWwindow* initgraph(int width, int height, float multiplier = 1,
                       RenderType rt = RenderType::Retro, int swap_interval = 0);
 void closegraph();
 void bitblt();
+void bitblt(const std::vector<color>&);
 GLFWwindow* get_window_handle();
 
 // basic
@@ -85,12 +96,11 @@ std::pair<int, int> get_buffer_size();
 std::pair<int, int> get_window_size();
 
 // color
-void enable_palette();
+void enable_palette(ColorOptimization co = ColorOptimization::None, int palette_size = 256);
 void disable_palette();
 bool using_palette();
 void set_palette(int idx, color);
 color get_palette(int idx);
-void restricted_palette(bool, Dithering);
 color rgb2color(uint8_t r, uint8_t g, uint8_t b);
 std::tuple<uint8_t, uint8_t, uint8_t> color2rgb(color c);
 

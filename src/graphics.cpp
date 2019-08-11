@@ -165,15 +165,17 @@ void closegraph() {
     exit(EXIT_SUCCESS);
 }
 
-void bitblt() {
+void bitblt(const std::vector<color>& screen_buffer) {
+    if (screen_buffer.size() != __screen_width__ * __screen_height__)
+        throw std::runtime_error("Buffer size doesn't match screen size.");
     glClear(GL_COLOR_BUFFER_BIT);
     if (using_palette()) {
-        auto buffer = apply_palette(__screen_buffer__);
+        auto buffer = apply_palette(screen_buffer);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, __screen_width__, __screen_height__, GL_BGRA,
                         GL_UNSIGNED_BYTE, buffer.data());
     } else {
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, __screen_width__, __screen_height__, GL_BGRA,
-                        GL_UNSIGNED_BYTE, __screen_buffer__.data());
+                        GL_UNSIGNED_BYTE, screen_buffer.data());
     }
     glBegin(GL_TRIANGLE_FAN);
     glTexCoord2f(0, 0);
@@ -192,6 +194,8 @@ void bitblt() {
     update_fps();
     __total_frames__++;
 }
+
+void bitblt() { bitblt(__screen_buffer__); }
 
 // ----------------------------------------------------------------------------
 // basic drawing

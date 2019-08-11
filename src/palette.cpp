@@ -2,11 +2,12 @@
 
 namespace lfbg {
 
+typedef std::vector<std::vector<int>> matrix;
+
 extern int __screen_width__, __screen_height__;
 
 bool __use_palette__ = false;
-bool __restricted_palette__ = false;
-Dithering __dithering__ = Dithering::None;
+ColorOptimization __color_optimization__ = ColorOptimization::None;
 int __palette_size__ = 256;
 std::vector<color> __palette_output_buffer__;
 
@@ -78,58 +79,117 @@ inline uint8_t nearest_palette_color(color c) {
                                (g << __palette_r_bits__) | r];
 }
 
-void restricted_palette(bool restrict, Dithering dithering) {
-    __restricted_palette__ = restrict;
-    if (__restricted_palette__)
+void enable_palette(ColorOptimization co, int palette_size) {
+    __use_palette__ = true;
+    __palette_size__ = std::clamp(palette_size, 1, 256);
+    __color_optimization__ = co;
+    if (__color_optimization__ != ColorOptimization::None)
         calc_palette();
-    __dithering__ = dithering;
 }
-
-void enable_palette() { __use_palette__ = true; }
 
 void disable_palette() { __use_palette__ = false; }
 
 bool using_palette() { return __use_palette__; }
 
+void FloydSteinberg(std::vector<color>& output, const std::vector<color>& input) {
+    std::copy(input.begin(), input.end(), output.begin());
+    for (int i = 0, k = 0; i < __screen_height__; i++)
+        for (int j = 0; j < __screen_width__; j++, k++) {
+            color old = output[k];
+            uint8_t* c1 = (uint8_t*)&old;
+            output[k] = __palette__[nearest_palette_color(output[k])];
+            uint8_t* c = (uint8_t*)&output[k];
+            for (int l = 0; l < 3; l++) {
+                int e = (int)(c1[l]) - c[l];
+                if (j + 1 < __screen_width__)
+                    c[l + 4] = std::clamp((int)(c[l + 4]) + e * 7 / 16, 0, 255);
+                if (j - 1 >= 0 && i + 1 < __screen_height__) {
+                    const int idx = l + 4 * __screen_width__ - 1;
+                    c[idx] = std::clamp(int(c[idx]) + e * 3 / 16, 0, 255);
+                }
+                if (i + 1 < __screen_height__) {
+                    const int idx = l + 4 * __screen_width__;
+                    c[idx] = std::clamp((int)(c[idx]) + e * 5 / 16, 0, 255);
+                }
+                if (j + 1 < __screen_width__ && i + 1 < __screen_height__) {
+                    const int idx = l + 4 * __screen_width__ + 1;
+                    c[idx] = std::clamp((int)(c[idx]) + e * 1 / 16, 0, 255);
+                }
+            }
+        }
+}
+
+void FilterLite(std::vector<color>& output, const std::vector<color>& input) {
+    std::copy(input.begin(), input.end(), output.begin());
+    for (int i = 0, k = 0; i < __screen_height__; i++)
+        for (int j = 0; j < __screen_width__; j++, k++) {
+            color old = output[k];
+            uint8_t* c1 = (uint8_t*)&old;
+            output[k] = __palette__[nearest_palette_color(output[k])];
+            uint8_t* c = (uint8_t*)&output[k];
+            for (int l = 0; l < 3; l++) {
+                int e = (int)(c1[l]) - c[l];
+                if (j + 1 < __screen_width__)
+                    c[l + 4] = std::clamp((int)(c[l + 4]) + e / 2, 0, 255);
+                if (j - 1 >= 0 && i + 1 < __screen_height__) {
+                    const int idx = l + 4 * __screen_width__ - 1;
+                    c[idx] = std::clamp(int(c[idx]) + e / 4, 0, 255);
+                }
+                if (i + 1 < __screen_height__) {
+                    const int idx = l + 4 * __screen_width__;
+                    c[idx] = std::clamp((int)(c[idx]) + e / 4, 0, 255);
+                }
+            }
+        }
+}
+
+void Ordered2x2(std::vector<color>& output, const std::vector<color>& input) {
+    int m[2][2] = {{0, 2}, {3, 1}};
+    for (int i = 0, k = 0; i < __screen_height__; i++)
+        for (int j = 0; j < __screen_width__; j++, k++) {
+            auto c0 = (const uint8_t*)&input[k];
+            auto c1 = (uint8_t*)&output[k];
+            for (int l = 0; l < 3; l++)
+                c1[l] = std::clamp(
+                    (int)(c0[l]) + (2 * m[i & 1][j & 1] - 3) * 31 / (__palette_size__ - 1), 0, 255);
+            output[k] = __palette__[nearest_palette_color(output[k])];
+        }
+}
+
+void Ordered4x4(std::vector<color>& output, const std::vector<color>& input) {
+    int m[4][4] = {{0, 12, 3, 15}, {8, 4, 11, 7}, {2, 14, 1, 13}, {10, 6, 9, 5}};
+    for (int i = 0, k = 0; i < __screen_height__; i++)
+        for (int j = 0; j < __screen_width__; j++, k++) {
+            auto c0 = (const uint8_t*)&input[k];
+            auto c1 = (uint8_t*)&output[k];
+            for (int l = 0; l < 3; l++)
+                c1[l] = std::clamp(
+                    (int)(c0[l]) + (2 * m[i & 3][j & 3] - 15) * 7 / (__palette_size__ - 1), 0, 255);
+            output[k] = __palette__[nearest_palette_color(output[k])];
+        }
+}
+
 std::vector<color>& apply_palette(const std::vector<color>& buffer) {
     const size_t n = buffer.size();
     if (__palette_output_buffer__.size() != n)
         __palette_output_buffer__.resize(n);
-    if (__restricted_palette__) {
-        if (__dithering__ == Dithering::None) {
+    switch (__color_optimization__) {
+        case ColorOptimization::Threshold:
             for (size_t i = 0; i < n; i++)
                 __palette_output_buffer__[i] = __palette__[nearest_palette_color(buffer[i])];
-        } else if (__dithering__ == Dithering::Ordered) {
-            std::copy(buffer.begin(), buffer.end(), __palette_output_buffer__.begin());
-            for (int i = 0, k = 0; i < __screen_height__; i++)
-                for (int j = 0; j < __screen_width__; j++, k++) {
-                    color old = __palette_output_buffer__[k];
-                    uint8_t* c1 = (uint8_t*)&old;
-                    __palette_output_buffer__[k] =
-                        __palette__[nearest_palette_color(__palette_output_buffer__[k])];
-                    uint8_t* c = (uint8_t*)&__palette_output_buffer__[k];
-                    for (int l = 0; l < 3; l++) {
-                        int e = (int)(c1[l]) - c[l];
-                        if (j + 1 < __screen_width__)
-                            c[l + 4] = std::clamp((int)(c[l + 4]) + e * 7 / 16, 0, 255);
-                        if (j - 1 >= 0 && i + 1 < __screen_height__) {
-                            const int idx = l + 4*__screen_width__ - 1;
-                            c[idx] = std::clamp(int(c[idx]) + e * 3 / 16, 0, 255);
-                        }
-                        if (i + 1 < __screen_height__) {
-                            const int idx = l + 4*__screen_width__;
-                            c[idx] = std::clamp((int)(c[idx]) + e * 5 / 16, 0, 255);
-                        }
-                        if (j + 1 < __screen_width__ && i + 1 < __screen_height__){
-                            const int idx = l + 4*__screen_width__ + 1;
-                            c[idx] = std::clamp((int)(c[idx]) + e * 1 / 16, 0, 255);
-                        }
-                    }
-                }
-        }
-    } else
-        for (size_t i = 0; i < n; i++)
-            __palette_output_buffer__[i] = __palette__[buffer[i] & 0xff];
+            break;
+        case ColorOptimization::FloydSteinberg:
+            FloydSteinberg(__palette_output_buffer__, buffer);
+            break;
+        case ColorOptimization::FilterLite:
+            FilterLite(__palette_output_buffer__, buffer);
+            break;
+        case ColorOptimization::Ordered2x2: Ordered2x2(__palette_output_buffer__, buffer); break;
+        case ColorOptimization::Ordered4x4: Ordered4x4(__palette_output_buffer__, buffer); break;
+        default:
+            for (size_t i = 0; i < n; i++)
+                __palette_output_buffer__[i] = __palette__[buffer[i] & 0xff];
+    }
     return __palette_output_buffer__;
 }
 
