@@ -8,25 +8,25 @@ extern color __foreground_color__;
 
 color __fill_color__ = COLOR::WHITE;
 uint64_t __fill_patterns__[20] = {0,
-0xFFFFFFFFFFFFFFFF,
-0xFFFFFFFF00000000,
-0x0102040810204080,
-0xC3870F1E3C78F0E1,
-0xE1F0783C1E0F87C3,
-0xD269B45A2D964BA5,
-0xFF888888FF888888,
-0x8142241818244281,
-0xAA55AA55AA55AA55,
-0x8000080080000800,
-0x8800220088002200,
-0x3333CCCC3333CCCC,
-0xF0F0F0F00F0F0F0F,
-0x0010284428100000,
-0xFF7E3C18183C7EFF,
-0x0010107C10100000,
-0x0042241818244200,
-0x8040201008040201,
-0x331B0F1B331B0F00};
+                                  0xFFFFFFFFFFFFFFFF,
+                                  0xFFFFFFFF00000000,
+                                  0x0102040810204080,
+                                  0xC3870F1E3C78F0E1,
+                                  0xE1F0783C1E0F87C3,
+                                  0xD269B45A2D964BA5,
+                                  0xFF888888FF888888,
+                                  0x8142241818244281,
+                                  0xAA55AA55AA55AA55,
+                                  0x8000080080000800,
+                                  0x8800220088002200,
+                                  0x3333CCCC3333CCCC,
+                                  0xF0F0F0F00F0F0F0F,
+                                  0x0010284428100000,
+                                  0xFF7E3C18183C7EFF,
+                                  0x0010107C10100000,
+                                  0x0042241818244200,
+                                  0x8040201008040201,
+                                  0x331B0F1B331B0F00};
 uint64_t __fill_pattern__ = __fill_patterns__[1];
 
 void setfillstyle(int style, color c) {
@@ -34,17 +34,11 @@ void setfillstyle(int style, color c) {
     __fill_color__ = c;
 }
 
-void setfillpattern(uint64_t pattern8x8){
-    __fill_pattern__ = pattern8x8;
-}
+void setfillpattern(uint64_t pattern8x8) { __fill_pattern__ = pattern8x8; }
 
-uint64_t getfillpattern(){
-    return __fill_pattern__;
-}
+uint64_t getfillpattern() { return __fill_pattern__; }
 
-color getfillcolor(){
-    return __fill_color__;
-}
+color getfillcolor() { return __fill_color__; }
 
 void fline(int x1, int x2, int y) {
     if (x1 > x2)
@@ -393,8 +387,10 @@ void ellipse_helper(int cx, int cy, int xr, int yr, char flag) {
 }
 
 void ellipse(int cx, int cy, int xr, int yr) {
-    ellipse_helper(cx, cy, xr, yr, 0);
-    ellipse_helper(cx, cy, yr, xr, 1);
+    if (xr > 0 && yr > 0) {
+        ellipse_helper(cx, cy, xr, yr, 0);
+        ellipse_helper(cx, cy, yr, xr, 1);
+    }
 }
 
 void ellipse_fill_middle(int cx, int cy, int xr, int yr) {
@@ -440,35 +436,45 @@ void ellipse_fill_outer(int cx, int cy, int xr, int yr) {
 }
 
 void fillellipse(int cx, int cy, int xr, int yr) {
-    ellipse_fill_middle(cx, cy, xr, yr);
-    ellipse_fill_outer(cx, cy, yr, xr);
+    if (xr > 0 && yr > 0) {
+        ellipse_fill_middle(cx, cy, xr, yr);
+        ellipse_fill_outer(cx, cy, yr, xr);
+    }
 }
 
 // Fill a triangle - slope method
 // Original Author: Adafruit Industries
-void filltriangle(int x0, int y0, int x1, int y1, int x2, int y2){
+void filltriangle(int x0, int y0, int x1, int y1, int x2, int y2) {
     int a, b, y, last;
-  	// Sort coordinates by Y order (y2 >= y1 >= y0)
-  	if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
-  	if (y1 > y2) { std::swap(y2, y1); std::swap(x2, x1); }
-  	if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
+    // Sort coordinates by Y order (y2 >= y1 >= y0)
+    if (y0 > y1) {
+        std::swap(y0, y1);
+        std::swap(x0, x1);
+    }
+    if (y1 > y2) {
+        std::swap(y2, y1);
+        std::swap(x2, x1);
+    }
+    if (y0 > y1) {
+        std::swap(y0, y1);
+        std::swap(x0, x1);
+    }
 
-  	if(y0 == y2) { // All on same line case
-    	a = b = x0;
-    	if(x1 < a)      a = x1;
-    	else if(x1 > b) b = x1;
-    	if(x2 < a)      a = x2;
-    	else if(x2 > b) b = x2;
+    if (y0 == y2) { // All on same line case
+        a = b = x0;
+        if (x1 < a)
+            a = x1;
+        else if (x1 > b)
+            b = x1;
+        if (x2 < a)
+            a = x2;
+        else if (x2 > b)
+            b = x2;
         fline(a, b, y0);
         return;
     }
 
-    int
-        dx01 = x1 - x0,
-        dy01 = y1 - y0,
-        dx02 = x2 - x0,
-        dy02 = y2 - y0,
-        dx12 = x2 - x1,
+    int dx01 = x1 - x0, dy01 = y1 - y0, dx02 = x2 - x0, dy02 = y2 - y0, dx12 = x2 - x1,
         dy12 = y2 - y1;
     int sa = 0, sb = 0;
 
@@ -478,12 +484,14 @@ void filltriangle(int x0, int y0, int x1, int y1, int x2, int y2){
     // error there), otherwise scanline y1 is skipped here and handle
     // in the second loop...which also avoids a /0 error here if y0=y
     // (flat-topped triangle)
-    if(y1 == y2) last = y1;   // Include y1 scanline
-    else         last = y1-1; // Skip it
+    if (y1 == y2)
+        last = y1; // Include y1 scanline
+    else
+        last = y1 - 1; // Skip it
 
-    for(y=y0; y<=last; y++) {
-        a   = x0 + sa / dy01;
-        b   = x0 + sb / dy02;
+    for (y = y0; y <= last; y++) {
+        a = x0 + sa / dy01;
+        b = x0 + sb / dy02;
         sa += dx01;
         sb += dx02;
         // longhand a = x0 + (x1 - x0) * (y - y0) / (y1 - y0)
@@ -495,9 +503,9 @@ void filltriangle(int x0, int y0, int x1, int y1, int x2, int y2){
     // 0-2 and 1-2.  This loop is skipped if y1=y2
     sa = dx12 * (y - y1);
     sb = dx02 * (y - y0);
-    for(; y<=y2; y++) {
-        a   = x1 + sa / dy12;
-        b   = x0 + sb / dy02;
+    for (; y <= y2; y++) {
+        a = x1 + sa / dy12;
+        b = x0 + sb / dy02;
         sa += dx12;
         sb += dx02;
         // longhand a = x1 + (x2 - x1) * (y - y1) / (y2 - y1)

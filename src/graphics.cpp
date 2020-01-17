@@ -166,7 +166,7 @@ void closegraph() {
 }
 
 void bitblt(const std::vector<color>& screen_buffer) {
-    if (screen_buffer.size() != __screen_width__ * __screen_height__)
+    if (screen_buffer.size() != (size_t) __screen_width__ * __screen_height__)
         throw std::runtime_error("Buffer size doesn't match screen size.");
     glClear(GL_COLOR_BUFFER_BIT);
     if (using_palette()) {
