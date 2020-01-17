@@ -21,5 +21,5 @@ target_link_libraries(vga lfbg)
 add_executable(text_demo text_demo.cpp)
 target_link_libraries(text_demo lfbg)
 
-add_executable(test test.cpp)
-target_link_libraries(test lfbg)
+add_executable(test_debug test_debug.cpp)
+target_link_libraries(test_debug lfbg)
