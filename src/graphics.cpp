@@ -3,7 +3,7 @@
 namespace lfbg {
 
 // defined objects
-GLuint __screen_texture_id__;
+std::array<GLuint, 2> __screen_texture_ids__;
 GLFWwindow* __window_handle__;
 int __screen_width__, __screen_height__;
 int __window_width__, __window_height__;
@@ -12,6 +12,8 @@ color __foreground_color__ = COLOR::WHITE;
 std::string __window_title__;
 uint64_t __total_frames__;
 window_helper __window__helper_obj__;
+
+std::vector<color> __effect_buffer__;
 
 // extern objects
 extern int __cursor_offset_x__, __cursor_offset_y__;
@@ -130,27 +132,59 @@ GLFWwindow* initgraph(int width, int height, float multiplier, RenderType rt, in
     glEnable(GL_TEXTURE_2D);
     // glEnable(GL_CULL_FACE);
     // glFrontFace(GL_CW);
-    glDisable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
+    // glDisable(GL_BLEND);
+    glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+    // glDisable(GL_DEPTH_TEST);
     glDisable(GL_SCISSOR_TEST);
 
     glfwSwapInterval(swap_interval);
 
-    glGenTextures(1, &__screen_texture_id__);
-    glBindTexture(GL_TEXTURE_2D, __screen_texture_id__);
+    glGenTextures(__screen_texture_ids__.size(), __screen_texture_ids__.data());
+    glBindTexture(GL_TEXTURE_2D, __screen_texture_ids__[0]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, __screen_width__, __screen_height__, 0, GL_BGRA,
                  GL_UNSIGNED_BYTE, __screen_buffer__.data());
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    if (rt == RenderType::Retro) {
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // if (rt == RenderType::Retro) {
+    if(false){
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     } else {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
-    glActiveTexture(GL_TEXTURE0);
 
+    const int ew = __screen_width__ * 4;
+    const int eh = __screen_height__ * 4;
+    __effect_buffer__.resize(ew * eh);
+    for (int y = 0, i = 0; y < eh; y++)
+        for (int x = 0; x < ew; x++, i++)
+            if (y % 4 == 3)
+                __effect_buffer__[i] = 0x7F000000;
+            else if(y % 4 != 1 && x % 2 == 0)
+                __effect_buffer__[i] = 0xCF000000;
+            else
+                __effect_buffer__[i] = 0xFF000000;
+
+    glBindTexture(GL_TEXTURE_2D, __screen_texture_ids__[1]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ew, eh, 0, GL_BGRA, GL_UNSIGNED_BYTE,
+                 __effect_buffer__.data());
+    // if (rt == RenderType::Retro) {
+    if(false){
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    } else {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
+    // glGenerateMipmapEXT(GL_TEXTURE_2D_ARRAY);
+    // glGenerateTextureMipmap(__screen_texture_ids__[1]);
+
+    // glActiveTexture(GL_TEXTURE1);
     glfwGetWindowSize(__window_handle__, &__window_width__, &__window_height__);
     __default_window_resize_callback__(__window_width__, __window_height__);
     init_fps();
@@ -160,33 +194,39 @@ GLFWwindow* initgraph(int width, int height, float multiplier, RenderType rt, in
 
 void closegraph() {
     glfwDestroyWindow(__window_handle__);
-    glDeleteTextures(1, &__screen_texture_id__);
+    glDeleteTextures(__screen_texture_ids__.size(), __screen_texture_ids__.data());
     glfwTerminate();
     exit(EXIT_SUCCESS);
 }
 
 void bitblt(const std::vector<color>& screen_buffer) {
-    if (screen_buffer.size() != (size_t) __screen_width__ * __screen_height__)
+    if (screen_buffer.size() != (size_t)__screen_width__ * __screen_height__)
         throw std::runtime_error("Buffer size doesn't match screen size.");
     glClear(GL_COLOR_BUFFER_BIT);
     if (using_palette()) {
         auto buffer = apply_palette(screen_buffer);
+        glBindTexture(GL_TEXTURE_2D, __screen_texture_ids__[0]);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, __screen_width__, __screen_height__, GL_BGRA,
                         GL_UNSIGNED_BYTE, buffer.data());
     } else {
+        glBindTexture(GL_TEXTURE_2D, __screen_texture_ids__[0]);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, __screen_width__, __screen_height__, GL_BGRA,
                         GL_UNSIGNED_BYTE, screen_buffer.data());
     }
-    glBegin(GL_TRIANGLE_FAN);
-    glTexCoord2f(0, 0);
-    glVertex2f(-1, 1);
-    glTexCoord2f(1, 0);
-    glVertex2f(1, 1);
-    glTexCoord2f(1, 1);
-    glVertex2f(1, -1);
-    glTexCoord2f(0, 1);
-    glVertex2f(-1, -1);
-    glEnd();
+    for (auto& id : __screen_texture_ids__) {
+        // {auto id = __screen_texture_ids__[1];
+        glBindTexture(GL_TEXTURE_2D, id);
+        glBegin(GL_TRIANGLE_FAN);
+        glTexCoord2f(0, 0);
+        glVertex2f(-1, 1);
+        glTexCoord2f(1, 0);
+        glVertex2f(1, 1);
+        glTexCoord2f(1, 1);
+        glVertex2f(1, -1);
+        glTexCoord2f(0, 1);
+        glVertex2f(-1, -1);
+        glEnd();
+    }
     glfwSwapBuffers(__window_handle__);
     kbreset();
     mbreset();
